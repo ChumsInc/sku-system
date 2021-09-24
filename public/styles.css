@@ -1,0 +1,57 @@
+#app .btn-xs {
+  padding: .125rem .25rem;
+  font-size: .75rem;
+  line-height: 1; }
+#app .pagination .page-item {
+  text-align: center; }
+#app .debug {
+  display: none; }
+  #app .debug code {
+    white-space: pre; }
+#app .debugging .debug {
+  display: inherit; }
+#app .form-inline {
+  margin-bottom: 10px; }
+  #app .form-inline label,
+  #app .form-inline input,
+  #app .form-inline select,
+  #app .form-inline button {
+    margin-right: 5px; }
+#app ul.nav-tabs {
+  margin-bottom: 10px; }
+#app .userlist.table-responsive {
+  max-height: 750px; }
+  @media screen and (max-width: 767px) {
+    #app .userlist.table-responsive {
+      max-height: 350px;
+      overflow-y: auto; } }
+#app th.sortable {
+  cursor: pointer; }
+  #app th.sortable.sorted {
+    color: #ffffff;
+    background-color: #337ab7; }
+    #app th.sortable.sorted.desc {
+      background-color: #d9edf7;
+      color: #337ab7; }
+#app td.right {
+  text-align: right; }
+#app td.upc {
+  white-space: nowrap; }
+#app label input[type="checkbox"] {
+  margin-right: 10px; }
+#app button + button {
+  margin-left: 5px; }
+#app table thead.sticky {
+  position: sticky;
+  top: 0px;
+  background-color: rgba(225, 225, 225, 0.9); }
+#app table th,
+#app table td {
+  font-size: 12px; }
+#app textarea {
+  min-height: 150px; }
+
+.sku-item-list + .page-display {
+  display: block; }
+
+/*# sourceMappingURL=styles.css.map */

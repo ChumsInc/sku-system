@@ -1,6 +1,6 @@
 {
   "name": "sku-system",
-  "version": "2.0.7",
+  "version": "2.1.0",
   "main": "index.php",
   "scripts": {
     "start": "webpack serve --config webpack.dev.js --progress",

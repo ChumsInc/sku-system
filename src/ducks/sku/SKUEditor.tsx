@@ -2,8 +2,6 @@
  * Created by steve on 3/22/2017.
  */
 import React, {ChangeEvent, FormEvent, useState} from 'react';
-import FormControlGroup from '../../chums-components/FormControlGroup';
-import classNames from 'classnames';
 import GTIN from '../../GTIN';
 import {useDispatch, useSelector} from "react-redux";
 import {selectSelectedGroup, selectSelectedSKU, selectSelectedSKULoading} from "./selectors";
@@ -11,6 +9,8 @@ import {changeSKUAction, saveSKUAction} from "./actions";
 import {selectIsAdmin} from "../users";
 import {ProductSKUField} from "../../types";
 import {FormColumn} from "chums-ducks";
+import ActiveButtonGroup from "../../components/ActiveButtonGroup";
+import TextArea from 'react-textarea-autosize';
 
 const SKUEditor: React.FC = () => {
     const dispatch = useDispatch();
@@ -77,25 +77,11 @@ const SKUEditor: React.FC = () => {
                            value={selected.upc} readOnly={!isAdmin} onChange={onChange('upc')} onBlur={onBlurUPC}/>
                 </FormColumn>
                 <FormColumn label="Notes">
-                    <textarea className="form-control form-control-sm" rows={5}
-                              readOnly={!isAdmin} onChange={onChangeNotes} value={selected.notes || ''} />
+                    <TextArea className="form-control form-control-sm" minRows={3}
+                              readOnly={!isAdmin} onChange={onChangeNotes} value={selected.notes || ''}/>
                 </FormColumn>
                 <FormColumn label="Active">
-                    <div className="btn-group btn-group-sm">
-                        <button type="button"
-                                className={classNames('btn btn-sm', {
-                                    'btn-success': active,
-                                    'btn-outline-success': !active
-                                })}
-                                disabled={!isAdmin}
-                                onClick={() => onChangeActive(true)}>Yes
-                        </button>
-                        <button type="button"
-                                className={classNames('btn btn-sm', {'btn-outline-danger': active, 'btn-danger': !active})}
-                                disabled={!isAdmin}
-                                onClick={() => onChangeActive(false)}>No
-                        </button>
-                    </div>
+                    <ActiveButtonGroup active={active} onChange={onChangeActive} disabled={!isAdmin}/>
                 </FormColumn>
                 <FormColumn label="">
                     <button type="submit" disabled={!isAdmin} className="btn btn-sm btn-primary">Save</button>

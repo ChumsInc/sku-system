@@ -106,7 +106,7 @@ export const saveColorAction = (color:ProductColor):ColorsThunkAction =>
             }
             dispatch({type: saveColorRequested});
             const url = buildPath('/api/operations/sku/colors/:id', {id: color.id});
-            const res = await fetchJSON(url, {cache: "no-cache"});
+            const res = await fetchJSON(url, {method: 'POST', body: JSON.stringify(color)});
             dispatch({type: saveColorSucceeded, payload: {color: res.color}});
         } catch(error:unknown) {
             if (error instanceof Error) {
@@ -131,6 +131,7 @@ export const selectColorsList = (sort: ProductSorterProps) => (state: RootState)
         .filter(color => re.test(color.code) || re.test(color.description || ''));
 }
 export const selectColorsCount = (state: RootState) => state.colors.list.length;
+export const selectActiveColorsCount = (state: RootState) => state.colors.list.filter(color => color.active).length;
 export const selectSearch = (state: RootState) => state.colors.search;
 export const selectFilterInactive = (state: RootState) => state.colors.filterInactive;
 export const selectLoading = (state: RootState) => state.colors.loading;

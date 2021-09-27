@@ -19,6 +19,8 @@ export const selectSKUList = (sort:ProductSKUSorterProps) => (state:RootState):P
         .filter(item => re.test(item.sku) || re.test(item.upc) || re.test(item.description) || re.test(item.notes || ''))
         .sort(productSKUSorter(sort));
 }
+export const selectSKUListLength = (state:RootState) => Object.values(state.sku.list).length;
+export const selectSKUListActiveLength = (state:RootState) => Object.values(state.sku.list).filter(sku => sku.active).length;
 export const selectSKUListLoading = (state:RootState):boolean => state.sku.loading;
 export const selectSKUSaving = (state:RootState):boolean => state.sku.saving;
 export const selectSelectedSKU = (state:RootState):ProductSKU => state.sku.selected;

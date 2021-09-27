@@ -1,13 +1,22 @@
 import {combineReducers} from "redux";
-import {ProductMix, ProductMixField, ProductSorterProps} from "../../types";
-import {ActionInterface, ActionPayload} from "chums-ducks";
+import {ProductColor, ProductColorField, ProductMix, ProductMixField, ProductSorterProps} from "../../types";
+import {ActionInterface, ActionPayload, buildPath, fetchJSON} from "chums-ducks";
 import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
 import {itemsFilterInactiveChanged, itemsSearchChanged} from "../items";
 import {productMixKey, productMixSorter, defaultMixSort} from "./utils";
+import {
+    colorChanged,
+    colorSelected,
+    ColorsThunkAction, defaultProductColor, fetchColorFailed, fetchColorRequested,
+    fetchColorsFailed,
+    fetchColorsRequested,
+    fetchColorsSucceeded, fetchColorSucceeded, saveColorFailed, saveColorRequested, saveColorSucceeded
+} from "../colors";
+import {fetchSettingsSucceeded} from "../settings";
 
 export interface MixesPayload extends ActionPayload {
-    list?: ProductMix[],
+    mixes?: ProductMix[],
     mix?: ProductMix,
     search?: string,
     field?: ProductMixField,
@@ -37,7 +46,9 @@ export const fetchMixesRequested = 'mixes/fetchRequested';
 export const fetchMixesSucceeded = 'mixes/fetchSucceeded';
 export const fetchMixesFailed = 'mixes/fetchFailed';
 
+export const mixSelected = 'mixes/selected'
 export const mixChanged = 'mixes/selected/mixChanged';
+
 export const fetchMixRequested = 'mixes/selected/fetchRequested';
 export const fetchMixSucceeded = 'mixes/selected/fetchSucceeded';
 export const fetchMixFailed = 'mixes/selected/fetchFailed';
@@ -49,6 +60,70 @@ export const saveMixFailed = 'mixes/selected/saveFailed';
 
 export const searchChangedAction = (search: string) => ({type: mixesSearchChanged, payload: {search}});
 export const filterInactiveChangedAction = () => ({type: mixesFilterInactiveChanged});
+export const mixChangedAction = (field:ProductMixField, value: unknown) => ({type: mixChanged, payload: {field, value}});
+
+export const fetchListAction = ():MixesThunkAction =>
+    async (dispatch, getState) => {
+        try {
+            const state = getState();
+            if (selectLoading(state)) {
+                return;
+            }
+            dispatch({type: fetchMixesRequested});
+            const url = buildPath('/api/operations/sku/mixes',);
+            const {list} = await fetchJSON(url, {cache: "no-cache"});
+            dispatch({type: fetchMixesSucceeded, payload: {mixes: list || []}});
+        } catch(error:unknown) {
+            if (error instanceof Error) {
+                console.log("fetchListAction()", error.message);
+                return dispatch({type:fetchMixesFailed, payload: {error, context: fetchMixesRequested}})
+            }
+            console.error("fetchListAction()", error);
+        }
+    }
+
+export const fetchMixAction = (mix:ProductMix):MixesThunkAction =>
+    async (dispatch, getState) => {
+        try {
+            const state = getState();
+            if (selectLoading(state)) {
+                return;
+            }
+            if (!mix.id) {
+                return dispatch({type: mixSelected, payload: {mix}});
+            }
+            dispatch({type: fetchMixRequested, payload: {mix}});
+            const url = buildPath('/api/operations/sku/mixes/:id', {id: mix.id});
+            const {list} = await fetchJSON(url, {cache: "no-cache"});
+            dispatch({type: fetchMixSucceeded, payload: {mix: list[0] || defaultProductMix}});
+        } catch(error:unknown) {
+            if (error instanceof Error) {
+                console.log("fetchMixAction()", error.message);
+                return dispatch({type:fetchMixFailed, payload: {error, context: fetchMixRequested}})
+            }
+            console.error("fetchMixAction()", error);
+        }
+    }
+
+export const saveMixAction = (mix:ProductMix):MixesThunkAction =>
+    async (dispatch, getState) => {
+        try {
+            const state = getState();
+            if (selectLoading(state)) {
+                return;
+            }
+            dispatch({type: saveMixRequested});
+            const url = buildPath('/api/operations/sku/colors/:id', {id: mix.id});
+            const res = await fetchJSON(url, {method: 'POST', body: JSON.stringify(mix)});
+            dispatch({type: saveMixSucceeded, payload: {mix: res.mix}});
+        } catch(error:unknown) {
+            if (error instanceof Error) {
+                console.log("saveMixAction()", error.message);
+                return dispatch({type:saveMixFailed, payload: {error, context: saveMixRequested}})
+            }
+            console.error("saveMixAction()", error);
+        }
+    }
 
 export const selectMixesList = (sort: ProductSorterProps) => (state: RootState): ProductMix[] => {
     const search = selectSearch(state);
@@ -63,6 +138,7 @@ export const selectMixesList = (sort: ProductSorterProps) => (state: RootState):
         .filter(mix => re.test(mix.code) || re.test(mix.description || ''));
 }
 export const selectMixesCount = (state: RootState) => state.mixes.list.length;
+export const selectActiveMixesCount = (state: RootState) => state.mixes.list.filter(mix => mix.active).length;
 export const selectSearch = (state: RootState) => state.mixes.search;
 export const selectFilterInactive = (state: RootState) => state.mixes.filterInactive;
 export const selectLoading = (state: RootState) => state.mixes.loading;
@@ -92,9 +168,10 @@ const filterInactiveReducer = (state: boolean = true, action: MixesAction): bool
 const listReducer = (state: ProductMix[] = [], action: MixesAction): ProductMix[] => {
     const {type, payload} = action;
     switch (type) {
+    case fetchSettingsSucceeded:
     case fetchMixesSucceeded:
-        if (payload?.list) {
-            return [...payload.list].sort(productMixSorter(defaultMixSort));
+        if (payload?.mixes) {
+            return [...payload.mixes].sort(productMixSorter(defaultMixSort));
         }
         return state;
     case fetchMixSucceeded:

@@ -1,6 +1,12 @@
 import React, {ChangeEvent} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import {selectFilterInactive, selectSearch, selectSelectedGroup} from "./selectors";
+import {
+    selectFilterInactive,
+    selectSearch,
+    selectSelectedGroup,
+    selectSKUListActiveLength,
+    selectSKUListLength
+} from "./selectors";
 import SKUGroupSelect from "../groups/SKUGroupSelect";
 import {SKUGroup} from "../../types";
 import {
@@ -12,11 +18,14 @@ import {
 } from "./actions";
 import {FormCheck} from "chums-ducks";
 import {newProductSKU} from "./actionTypes";
+import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 
 const SKUFilter:React.FC = () => {
     const dispatch = useDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);
+    const countActive = useSelector(selectSKUListActiveLength);
+    const countAll = useSelector(selectSKUListLength);
     const skuGroup = useSelector(selectSelectedGroup);
 
     const onSelectSKUGroup = (group?:SKUGroup) => dispatch(selectSKUGroupAction(group));
@@ -34,8 +43,8 @@ const SKUFilter:React.FC = () => {
                 <SKUGroupSelect value={skuGroup?.id} allowAllGroups onChange={onSelectSKUGroup} showInactive={!filterInactive}/>
             </div>
             <div className="col-auto">
-                <FormCheck type="checkbox" label="Show Inactive?"
-                           checked={!filterInactive} onClick={onClickFilterInactive} />
+                <ShowInactiveCheckbox checked={!filterInactive} onChange={onClickFilterInactive}
+                                      countActive={countActive} countAll={countAll} />
             </div>
             <div className="col-auto">
                 <input type="search" value={search || ''} className="form-control form-control-sm"

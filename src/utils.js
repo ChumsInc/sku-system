@@ -3,12 +3,6 @@
  */
 "use strict";
 
-export function ellipses(text, length = 25) {
-    if (!text) {
-        text = '';
-    }
-    return `${text.substr(0, length)}${text.length > length ? '...' : ''}`;
-}
 
 export const sortProductLinesByDesc = (a, b) => a.ProductLineDesc === b.ProductLineDesc
     ? 0

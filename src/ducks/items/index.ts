@@ -38,6 +38,8 @@ export const itemsFetchItemRequested = 'items/fetchItemRequested';
 export const itemsFetchItemSucceeded = 'items/fetchItemSucceeded';
 export const itemsFetchItemFailed = 'items/fetchItemFailed';
 
+export const isActiveItem = (item:Product) => !(item.ProductType === 'D' || item.InactiveItem === 'Y')
+
 export const searchChangedAction = (search:string) => ({type: itemsSearchChanged, payload: {search}});
 export const filterInactiveChangedAction = () => ({type: itemsFilterInactiveChanged});
 
@@ -67,7 +69,7 @@ export const assignNextColorUPCAction = (item: Product): ItemsThunkAction =>
         try {
             console.log(item);
             const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = item;
-            if (InactiveItem === 'Y' || ProductType === 'D' || !!UDF_UPC_BY_COLOR) {
+            if (!isActiveItem(item) || !!UDF_UPC_BY_COLOR) {
                 return;
             }
 
@@ -110,10 +112,11 @@ export const selectItemList = (sort:ProductSorterProps) => (state: RootState): P
         re = new RegExp(search, 'i');
     } catch(err) {}
     return state.items.list
-        .filter(item => !filterInactive || !(item.ProductType === 'D' || item.InactiveItem === 'Y'))
+        .filter(item => !filterInactive || isActiveItem(item))
         .filter(item => re.test(item.ItemCode) || re.test(item.UDF_UPC || '') || re.test(item.ItemCodeDesc) || re.test(item.UDF_UPC_BY_COLOR || ''))
 }
 export const selectItemsCount = (state:RootState) => state.items.list.length;
+export const selectActiveItemsCount = (state:RootState) => state.items.list.filter(item => isActiveItem(item)).length;
 export const selectItemsLoading = (state: RootState) => state.items.list;
 export const selectAssigningItem = (itemCode: string) => (state: RootState): boolean => state.items.assigningItems.includes(itemCode);
 export const selectSearch = (state: RootState) => state.items.search;

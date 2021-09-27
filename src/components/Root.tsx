@@ -7,6 +7,10 @@ import AppTabs, {tabPaths} from "./AppTabs";
 import {AlertList} from "chums-ducks";
 import {fetchSettingsAction} from "../ducks/settings";
 import ColorsTab from "../ducks/colors/ColorsTab";
+import MixesTab from "../ducks/mixes/MixesTab";
+import GroupsTab from "../ducks/groups/GroupsTab";
+import CategoriesTab from "../ducks/categories/CategoriesTab";
+import ColorUPCTab from "../ducks/colorUPC/ColorUPCTab";
 
 
 const Root:React.FC = () => {
@@ -27,17 +31,12 @@ const Root:React.FC = () => {
                     <Redirect to={tabPaths.sku} />
                 )} />
                 <Route path="/" component={AppTabs} />
-                <div className="container-fluid">
-                    <Route path={tabPaths.sku} component={SKUSystemTab} />
-                    {/*<Route path={tabPaths.byColor} component={UPCByColorTab} />*/}
-                    <Route path={tabPaths.colors} component={ColorsTab} />
-                    {/*<Route path={tabPaths.mixes} component={MixesTab} />*/}
-                    {/*<Route path={tabPaths.groups} component={GroupsTab} />*/}
-                    {/*<Route path={tabPaths.categories} component={CategoriesTab} />*/}
-                </div>
-                <div style={{position: 'fixed', bottom: '0', right: '0', left: '0'}}>
-                    {/*Version: {version}*/}
-                </div>
+                <Route path={tabPaths.sku} component={SKUSystemTab} />
+                <Route path={tabPaths.byColor} component={ColorUPCTab} />
+                <Route path={tabPaths.colors} component={ColorsTab} />
+                <Route path={tabPaths.mixes} component={MixesTab} />
+                <Route path={tabPaths.groups} component={GroupsTab} />
+                <Route path={tabPaths.categories} component={CategoriesTab} />
             </div>
         </Router>
     );

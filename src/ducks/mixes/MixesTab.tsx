@@ -3,21 +3,21 @@
  */
 
 import React from 'react';
-import ColorsFilter from "./ColorsFilter";
-import ColorsList from "./ColorsList";
-import ColorEditor from "./ColorEditor";
+import MixesFilter from "./MixesFilter";
+import MixesList from "./MixesList";
+import MixEditor from "./MixEditor";
 
-const ColorsTab: React.FC = () => {
+const MixesTab: React.FC = () => {
 
     return (
         <div className="container">
             <div className="row g-3">
                 <div className="col-4">
-                    <ColorsFilter/>
-                    <ColorsList/>
+                    <MixesFilter/>
+                    <MixesList/>
                 </div>
                 <div className="col-4">
-                    <ColorEditor />
+                    <MixEditor />
                 </div>
                 <div className="col-4">
                     (reserved space for where-used list)
@@ -26,4 +26,4 @@ const ColorsTab: React.FC = () => {
         </div>
     )
 }
-export default ColorsTab
+export default MixesTab

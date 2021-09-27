@@ -9,14 +9,13 @@
  */
 
 require_once ("autoload.inc.php");
-require_once iUI::ACCESS_FILE;
+require_once 'access.inc.php';
 
 $bodyPath = "/apps/sku-system/";
 $title = "SKU System";
 $description = "Doing away with the old spreadsheet that is not able to have multiple people working in at the same time";
 
-$ui = new WebUI($bodyPath, $title, $description, true, true);
-$ui->version = "2016-06-23";
+$ui = new WebUI($bodyPath, $title, $description, true, 5);
 $ui->bodyClassName = 'container-fluid';
 $ui->AddCSS("public/styles.css");
 $ui->addManifest('public/js/manifest.json');
@@ -42,6 +41,10 @@ $ui->addManifest('public/js/manifest.json');
  * -- updated to react/redux
  * -- added editor for categories
  * -- updated all node_modules
+ *
+ * 9/27/2021
+ * -- updated to react/redux ducks layout
+ * -- updated to use /api/operations
  *
  */
 

@@ -12,7 +12,7 @@ export interface ProductLineList {
     [key:string]: ProductLine,
 }
 
-export interface ProductCategory {
+export interface Category {
     Category2: string,
     id: number,
     code: string,
@@ -21,9 +21,17 @@ export interface ProductCategory {
     notes: string,
     tags: unknown,
     productLine: string,
+    changed?: boolean,
 }
-export interface ProductCategoryList {
-    [key:string]: ProductCategory,
+export interface CategoryList {
+    [key:string]: Category,
+}
+export type CategoryField = keyof Category;
+export interface CategoryTableField extends SortableTableField {
+    field: CategoryField
+}
+export interface CategorySorterProps extends SorterProps {
+    field: CategoryField,
 }
 
 export type ProductSubCategory = string;
@@ -76,6 +84,7 @@ export interface ProductMix {
     active: boolean,
     notes: string|null,
     tags: unknown,
+    changed?: boolean,
 }
 export type ProductMixField = keyof ProductMix;
 export interface ProductMixTableField extends SortableTableField {
@@ -86,7 +95,7 @@ export interface ProductMixSorterProps extends SorterProps {
 }
 
 export interface ColorUPC {
-    company: string,
+    company: ''|'chums'|'bc',
     id: number,
     ItemCode: string,
     ItemCodeDesc: string,
@@ -97,7 +106,8 @@ export interface ColorUPC {
     InactiveItem: string,
     UDF_UPC: string,
     UDF_UPC_BY_COLOR: string
-    active: boolean
+    active: boolean,
+    changed?: boolean,
 }
 export type ColorUPCField = keyof ColorUPC;
 export interface ColorUPCTableField extends SortableTableField {
@@ -152,9 +162,10 @@ export interface SKUGroup {
     notes: string|null,
     tags: unknown,
     productLine: string,
+    changed?: boolean,
 }
 export type SKUGroupField = keyof SKUGroup;
-export interface SKUGroupTableField {
+export interface SKUGroupTableField extends SortableTableField {
     field: SKUGroupField,
 }
 export interface SKUGroupSorterProps extends SorterProps {

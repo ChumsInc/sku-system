@@ -5,7 +5,7 @@ import {RootState} from "../index";
 import {
     CountryOfOrigin,
     PrimaryVendor,
-    ProductCategory,
+    Category,
     ProductColor,
     ProductLine,
     ProductMix,
@@ -17,7 +17,7 @@ import {
 } from "../../types";
 
 export interface SettingsPayload extends ActionPayload {
-    categories?: ProductCategory[],
+    categories?: Category[],
     colors?: ProductColor[],
     countryOfOrigin?: CountryOfOrigin[],
     productLines?: ProductLine[],
@@ -82,10 +82,7 @@ export const fetchSettingsAction = (company: string = 'chums'): SettingsThunkAct
     };
 
 export const selectLoading = (state: RootState) => state.settings.loading;
-export const selectCategoryList = (state: RootState) => state.settings.categories;
-export const selectColorList = (state: RootState) => state.settings.colors;
 export const selectProductLineList = (state: RootState) => state.settings.productLines;
-export const selectMixList = (state: RootState) => state.settings.mixes;
 export const selectSKUList = (state: RootState) => state.settings.skuList;
 export const selectSubCategoryList = (state: RootState) => state.settings.subCategories;
 
@@ -101,21 +98,6 @@ const loadingReducer = (state: boolean = false, action: SettingsAction): boolean
         return state;
     }
 }
-
-const categoriesReducer = (state: ProductCategory[] = [], action: SettingsAction): ProductCategory[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.categories) {
-            return [...payload.categories];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
 
 const productLinesReducer = (state: ProductLine[] = [], action: SettingsAction): ProductLine[] => {
     const {type, payload} = action;
@@ -177,42 +159,10 @@ const skuListReducer = (state: ProductSKU[] = [], action: SettingsAction): Produ
     }
 };
 
-const colorsReducer = (state: ProductColor[] = [], action: SettingsAction): ProductColor[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.colors) {
-            return [...payload.colors];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const mixesReducer = (state: ProductMix[] = [], action: SettingsAction): ProductMix[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.mixes) {
-            return [...payload.mixes];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
 
 export default combineReducers({
     loading: loadingReducer,
-    categories: categoriesReducer,
     productLines: productLinesReducer,
     subCategories: subCategoriesReducer,
     skuList: skuListReducer,
-    colors: colorsReducer,
-    mixes: mixesReducer,
 });

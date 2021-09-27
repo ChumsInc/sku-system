@@ -10,7 +10,7 @@ import {Product, ProductSorterProps, ProductTableField} from "../../types";
 import ColorUPCButton from "./ColorUPCButton";
 import {
     filterInactiveChangedAction, loadSKUItemsAction,
-    searchChangedAction,
+    searchChangedAction, selectActiveItemsCount,
     selectFilterInactive,
     selectItemList, selectItemsCount,
     selectLoading,
@@ -28,15 +28,16 @@ import {
 } from "chums-ducks";
 import {selectSelectedSKU} from "../sku/selectors";
 import classNames from "classnames";
+import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 
 const tableFields: ProductTableField[] = [
     {field: 'company', title: 'Co', sortable: true},
     {field: 'ItemCode', title: 'Item', sortable: true},
-    {field: 'ItemCodeDesc', title: 'Desc', sortable: true, render: (row) => (<TrimmedText text={row.ItemCodeDesc}/>)},
+    {field: 'ItemCodeDesc', title: 'Desc', sortable: true, render: (row:Product) => (<TrimmedText text={row.ItemCodeDesc} />)},
     {field: 'ProductType', title: 'PT', sortable: true},
     {field: 'ItemStatus', title: 'Status', sortable: true},
-    {field: 'UDF_UPC', title: 'UPC', className: 'upc', sortable: true, render: (row) => GTIN.format(row.UDF_UPC),},
-    {field: 'UDF_UPC_BY_COLOR', title: 'Color UPC', sortable: true, render: (row) => (<ColorUPCButton item={row}/>)}
+    {field: 'UDF_UPC', title: 'UPC', className: 'upc', sortable: true, render: (row:Product) => GTIN.format(row.UDF_UPC || ''),},
+    {field: 'UDF_UPC_BY_COLOR', title: 'Color UPC', sortable: true, render: (row:Product) => (<ColorUPCButton item={row}/>)}
 
 ];
 
@@ -50,6 +51,7 @@ const SKUItemList: React.FC = () => {
     const sku = useSelector(selectSelectedSKU);
     const list = useSelector(selectItemList(sort));
     const listLength = useSelector(selectItemsCount);
+    const itemActiveCount = useSelector(selectActiveItemsCount);
     const pagedList = useSelector(pagedDataSelector(tableId, list));
 
     useEffect(() => {
@@ -78,8 +80,8 @@ const SKUItemList: React.FC = () => {
                            onChange={onChangeFilter} className="form-control form-control-sm"/>
                 </div>
                 <div className="col-auto">
-                    <FormCheck label="Show Inactive" checked={!filterInactive} onClick={onToggleFilterInactive}
-                               type="checkbox"/>
+                    <ShowInactiveCheckbox checked={!filterInactive} onChange={onToggleFilterInactive}
+                                          countAll={listLength} countActive={itemActiveCount} />
                 </div>
                 <div className="col-auto">
                     <SpinnerButton spinning={loading} size="sm" color="primary" onClick={onClickReload}>Reload</SpinnerButton>

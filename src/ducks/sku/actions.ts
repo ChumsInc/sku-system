@@ -1,4 +1,4 @@
-import {Product, ProductSKU, ProductSKUField, SKUGroup} from "../../types";
+import {ProductSKU, ProductSKUField, SKUGroup} from "../../types";
 import {
     newProductSKU,
     SKUAction,
@@ -7,11 +7,13 @@ import {
     skuFetchListSucceeded,
     skuFetchSKUFailed,
     skuFetchSKURequested,
-    skuFetchSKUSucceeded, skuFilterInactiveChanged,
+    skuFetchSKUSucceeded,
+    skuFilterInactiveChanged,
     skuGroupSelected,
     skuSaveSKUFailed,
     skuSaveSKURequested,
-    skuSaveSKUSucceeded, skuSearchChanged,
+    skuSaveSKUSucceeded,
+    skuSearchChanged,
     skuSelectedChanged,
     SKUThunkAction
 } from "./actionTypes";
@@ -19,8 +21,8 @@ import {buildPath, fetchJSON} from "chums-ducks";
 import {selectSKUListLoading, selectSKUSaving} from "./selectors";
 import {selectIsAdmin} from "../users";
 
-export const searchChangedAction = (search:string):SKUAction => ({type: skuSearchChanged, payload: {search}});
-export const filterInactiveChangedAction = ():SKUAction => ({type: skuFilterInactiveChanged});
+export const searchChangedAction = (search: string): SKUAction => ({type: skuSearchChanged, payload: {search}});
+export const filterInactiveChangedAction = (): SKUAction => ({type: skuFilterInactiveChanged});
 
 export const selectSKUAction = (sku: ProductSKU = newProductSKU): SKUThunkAction =>
     async (dispatch, getState) => {
@@ -66,7 +68,7 @@ export const fetchSKUListAction = (group_id?: number): SKUThunkAction =>
     };
 
 
-export const changeSKUAction = ({field, value}: {field: ProductSKUField, value: unknown}): SKUAction =>
+export const changeSKUAction = ({field, value}: { field: ProductSKUField, value: unknown }): SKUAction =>
     ({type: skuSelectedChanged, payload: {field, value}});
 
 export const saveSKUAction = (sku: ProductSKU): SKUThunkAction =>
@@ -81,7 +83,7 @@ export const saveSKUAction = (sku: ProductSKU): SKUThunkAction =>
             }
             dispatch({type: skuSaveSKURequested});
             const response = await fetchJSON('/api/operations/sku/base', {method: 'post', body: JSON.stringify(sku)});
-            const {skuBase}= response;
+            const {skuBase} = response;
             dispatch({type: skuSaveSKUSucceeded, payload: {sku: skuBase}});
         } catch (error: unknown) {
             if (error instanceof Error) {
@@ -89,10 +91,6 @@ export const saveSKUAction = (sku: ProductSKU): SKUThunkAction =>
                 return dispatch({type: skuSaveSKUFailed, payload: {error, context: skuSaveSKURequested}})
             }
             console.error("saveSKUAction()", error);
-        }
-        const {app} = getState();
-        if (!app.isAdmin) {
-            return;
         }
     };
 

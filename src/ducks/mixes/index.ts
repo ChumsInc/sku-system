@@ -135,7 +135,7 @@ export const selectMixesList = (sort: ProductSorterProps) => (state: RootState):
     }
     return state.mixes.list
         .filter(mix => !filterInactive || mix.active)
-        .filter(mix => re.test(mix.code) || re.test(mix.description || ''));
+        .filter(mix => re.test(mix.code) || re.test(mix.description || '') || re.test(mix.notes || ''));
 }
 export const selectMixesCount = (state: RootState) => state.mixes.list.length;
 export const selectActiveMixesCount = (state: RootState) => state.mixes.list.filter(mix => mix.active).length;
@@ -149,7 +149,7 @@ export const selectMixSaving = (state: RootState) => state.mixes.selectedSaving;
 const searchReducer = (state: string = '', action: MixesAction): string => {
     const {type, payload} = action;
     switch (type) {
-    case itemsSearchChanged:
+    case mixesSearchChanged:
         return payload?.search || '';
     default:
         return state;
@@ -158,7 +158,7 @@ const searchReducer = (state: string = '', action: MixesAction): string => {
 
 const filterInactiveReducer = (state: boolean = true, action: MixesAction): boolean => {
     switch (action.type) {
-    case itemsFilterInactiveChanged:
+    case mixesFilterInactiveChanged:
         return !state;
     default:
         return state;

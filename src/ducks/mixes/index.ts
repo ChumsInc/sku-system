@@ -113,8 +113,13 @@ export const saveMixAction = (mix:ProductMix):MixesThunkAction =>
                 return;
             }
             dispatch({type: saveMixRequested});
-            const url = buildPath('/api/operations/sku/colors/:id', {id: mix.id});
-            const res = await fetchJSON(url, {method: 'POST', body: JSON.stringify(mix)});
+            let url = '/api/operations/sku/mixes';
+            let method = 'POST';
+            if (mix.id) {
+                url = '/api/operations/sku/mixes'.replace(':id', encodeURIComponent(mix.id));
+                method = 'PUT';
+            }
+            const res = await fetchJSON(url, {method, body: JSON.stringify(mix)});
             dispatch({type: saveMixSucceeded, payload: {mix: res.mix}});
         } catch(error:unknown) {
             if (error instanceof Error) {

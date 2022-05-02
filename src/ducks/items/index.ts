@@ -84,7 +84,7 @@ export const assignNextColorUPCAction = (item: Product): ItemsThunkAction =>
             const {nextUPC} = await fetchJSON('/api/operations/sku/by-color/next', {cache: 'no-cache'});
             await fetchJSON('/api/operations/sku/by-color', {
                 method: 'POST',
-                body: JSON.stringify({ItemCode, upc: nextUPC})
+                body: JSON.stringify({company, ItemCode, upc: nextUPC})
             });
             await fetchJSON('/sage/api/item-upc.php', {
                 method: 'POST',

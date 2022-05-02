@@ -66,15 +66,24 @@ const SKUEditor: React.FC = () => {
                 <FormColumn label="SKU">
                     <input type="text" className="form-control form-control-sm"
                            value={selected.sku} readOnly={!isAdmin} onChange={onChange('sku')}/>
+                    <small className="text-muted">Item Category 4 value.</small>
                 </FormColumn>
                 <FormColumn label="Description">
                     <input type="text" className="form-control form-control-sm"
                            value={selected.description} readOnly={!isAdmin} onChange={onChange('description')}/>
+                    <small className="text-muted">To help you find it in the list.</small>
                 </FormColumn>
                 <FormColumn label="UPC">
-                    <input type="text" className="form-control form-control-sm"
-                           pattern="^(093039|000298|4538674)[0-9]{5,6}$" required
+                    <input type="text" className="form-control form-control-sm" list="sku-editor--default-sku-base"
+                           // pattern="^(093039|000298|4538674)[0-9]{5,6}$"
                            value={selected.upc} readOnly={!isAdmin} onChange={onChange('upc')} onBlur={onBlurUPC}/>
+                    <small className="text-muted">Generally the UDF_UPC value.</small>
+                    <datalist id="sku-editor--default-sku-base">
+                        <option value="093039">0 93039 ##### # - Chums</option>
+                        <option value="000298">0 00298 ##### # - Chums</option>
+                        <option value="094922">0 94922 ##### # - Beyond Coastal</option>
+                        <option value="4538674">4 538674 ######- Chums Japan</option>
+                    </datalist>
                 </FormColumn>
                 <FormColumn label="Notes">
                     <TextArea className="form-control form-control-sm" minRows={3}

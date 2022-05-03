@@ -116,7 +116,7 @@ export const saveMixAction = (mix:ProductMix):MixesThunkAction =>
             let url = '/api/operations/sku/mixes';
             let method = 'POST';
             if (mix.id) {
-                url = '/api/operations/sku/mixes'.replace(':id', encodeURIComponent(mix.id));
+                url = '/api/operations/sku/mixes/:id'.replace(':id', encodeURIComponent(mix.id));
                 method = 'PUT';
             }
             const res = await fetchJSON(url, {method, body: JSON.stringify(mix)});

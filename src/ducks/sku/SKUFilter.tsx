@@ -5,7 +5,7 @@ import {
     selectSearch,
     selectSelectedGroup,
     selectSKUListActiveLength,
-    selectSKUListLength
+    selectSKUListLength, selectSKUListLoading
 } from "./selectors";
 import SKUGroupSelect from "../groups/SKUGroupSelect";
 import {SKUGroup} from "../../types";
@@ -16,7 +16,7 @@ import {
     selectSKUAction,
     selectSKUGroupAction
 } from "./actions";
-import {FormCheck} from "chums-ducks";
+import {FormCheck, SpinnerButton} from "chums-ducks";
 import {newProductSKU} from "./actionTypes";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 
@@ -27,6 +27,7 @@ const SKUFilter:React.FC = () => {
     const countActive = useSelector(selectSKUListActiveLength);
     const countAll = useSelector(selectSKUListLength);
     const skuGroup = useSelector(selectSelectedGroup);
+    const loading = useSelector(selectSKUListLoading);
 
     const onSelectSKUGroup = (group?:SKUGroup) => dispatch(selectSKUGroupAction(group));
     const onClickFilterInactive = () => dispatch(filterInactiveChangedAction())
@@ -56,7 +57,7 @@ const SKUFilter:React.FC = () => {
                 </button>
             </div>
             <div className="col-auto">
-                <button className="btn btn-sm btn-primary" onClick={onClickReload}>Reload</button>
+                <SpinnerButton className="btn btn-sm btn-primary" onClick={onClickReload} spinning={loading}>Reload</SpinnerButton>
             </div>
         </div>
     )

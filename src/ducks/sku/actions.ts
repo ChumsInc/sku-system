@@ -13,7 +13,7 @@ import {
     skuSaveSKUFailed,
     skuSaveSKURequested,
     skuSaveSKUSucceeded,
-    skuSearchChanged,
+    skuSearchChanged, skuSelected,
     skuSelectedChanged,
     SKUThunkAction
 } from "./actionTypes";
@@ -28,6 +28,7 @@ export const selectSKUAction = (sku: ProductSKU = newProductSKU): SKUThunkAction
     async (dispatch, getState) => {
         try {
             if (!sku || !sku.id) {
+                dispatch({type: skuSelected, payload: {sku}})
                 return;
             }
             const state = getState();

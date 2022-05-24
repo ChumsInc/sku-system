@@ -1,25 +1,23 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useState} from 'react';
+import React, {ChangeEvent, FormEvent} from 'react';
 import GTIN from '../../GTIN';
 import {useDispatch, useSelector} from "react-redux";
-import {selectSelectedGroup, selectSelectedSKU, selectSelectedSKULoading} from "./selectors";
+import {selectSelectedSKU, selectSelectedSKULoading} from "./selectors";
 import {changeSKUAction, saveSKUAction} from "./actions";
 import {selectIsAdmin} from "../users";
-import {ProductSKUField} from "../../types";
-import {FormColumn} from "chums-ducks";
+import {ProductSKUField, SKUGroup} from "../../types";
+import {FormColumn, SpinnerButton} from "chums-ducks";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import TextArea from 'react-textarea-autosize';
+import SKUGroupSelect from "../groups/SKUGroupSelect";
 
 const SKUEditor: React.FC = () => {
     const dispatch = useDispatch();
     const selected = useSelector(selectSelectedSKU);
     const loading = useSelector(selectSelectedSKULoading);
     const isAdmin = useSelector(selectIsAdmin);
-    const skuGroup = useSelector(selectSelectedGroup);
-
-    const [upcBase, setUPCBase] = useState('093039');
 
     const onChangeNotes = (ev: ChangeEvent<HTMLTextAreaElement>) => dispatch(
         changeSKUAction({field: 'notes', value: ev.target.value})
@@ -30,52 +28,46 @@ const SKUEditor: React.FC = () => {
         dispatch(changeSKUAction({field: 'upc', value: upc}));
     }
     const onChange = (field: ProductSKUField) => (ev: ChangeEvent<HTMLInputElement>) => {
-        // const value = GTIN.toString(ev.target.value);
         dispatch(changeSKUAction({field, value: ev.target.value}));
     }
 
+    const onChangeSKUGroup = (group: SKUGroup | undefined) => {
+        dispatch(changeSKUAction({
+            field: 'sku_group_id',
+            value: group?.id || 0
+        }));
+    }
 
     const onChangeActive = (active: boolean) => dispatch(changeSKUAction({field: 'active', value: active}));
 
     const onSaveSelected = (ev: FormEvent) => {
         ev.preventDefault();
+        if (!isAdmin) {
+            return;
+        }
         dispatch(saveSKUAction(selected));
     }
-    const {
-        id = 0,
-        sku = '',
-        upc = '',
-        changed = false,
-        sku_group_id = 0,
-        description,
-        notes = '',
-        active = false
-    } = selected;
-    const formattedUPC = upc.substr(0, 2) === '45'
-        ? GTIN.formatEAN13(upc, upc.length === 13)
-        : GTIN.formatUPC(upc, upc.length === 12);
 
     return (
         <>
             <form className="form-horizontal" onSubmit={onSaveSelected}>
                 <h3>SKU Editor</h3>
-                <FormColumn label="SKU Group">
-                    <input type="text" className="form-control form-control-sm"
-                           value={`${skuGroup?.code || ''} - ${skuGroup?.description || ''}`} readOnly/>
+                <FormColumn label="SKU Group" className="mb-3">
+                    <SKUGroupSelect onChange={onChangeSKUGroup} value={selected.sku_group_id} required/>
                 </FormColumn>
-                <FormColumn label="SKU">
+                <FormColumn label="SKU" className="mb-3">
                     <input type="text" className="form-control form-control-sm"
                            value={selected.sku} readOnly={!isAdmin} onChange={onChange('sku')}/>
                     <small className="text-muted">Item Category 4 value.</small>
                 </FormColumn>
-                <FormColumn label="Description">
+                <FormColumn label="Description" className="mb-3">
                     <input type="text" className="form-control form-control-sm"
                            value={selected.description} readOnly={!isAdmin} onChange={onChange('description')}/>
                     <small className="text-muted">To help you find it in the list.</small>
                 </FormColumn>
-                <FormColumn label="UPC">
+                <FormColumn label="UPC" className="mb-3">
                     <input type="text" className="form-control form-control-sm" list="sku-editor--default-sku-base"
-                           // pattern="^(093039|000298|4538674)[0-9]{5,6}$"
+                        // pattern="^(093039|000298|4538674)[0-9]{5,6}$"
                            value={selected.upc} readOnly={!isAdmin} onChange={onChange('upc')} onBlur={onBlurUPC}/>
                     <small className="text-muted">Generally the UDF_UPC value.</small>
                     <datalist id="sku-editor--default-sku-base">
@@ -85,15 +77,16 @@ const SKUEditor: React.FC = () => {
                         <option value="4538674">4 538674 ######- Chums Japan</option>
                     </datalist>
                 </FormColumn>
-                <FormColumn label="Notes">
+                <FormColumn label="Notes" className="mb-3">
                     <TextArea className="form-control form-control-sm" minRows={3}
                               readOnly={!isAdmin} onChange={onChangeNotes} value={selected.notes || ''}/>
                 </FormColumn>
-                <FormColumn label="Active">
-                    <ActiveButtonGroup active={active} onChange={onChangeActive} disabled={!isAdmin}/>
+                <FormColumn label="Active" className="mb-3">
+                    <ActiveButtonGroup active={selected.active} onChange={onChangeActive} disabled={!isAdmin}/>
                 </FormColumn>
-                <FormColumn label="">
-                    <button type="submit" disabled={!isAdmin} className="btn btn-sm btn-primary">Save</button>
+                <FormColumn label="" className="mb-3">
+                    <SpinnerButton type="submit" disabled={!isAdmin} className="btn btn-sm btn-primary"
+                                   spinning={loading}>Save</SpinnerButton>
                 </FormColumn>
             </form>
 

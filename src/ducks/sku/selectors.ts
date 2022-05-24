@@ -2,6 +2,7 @@ import {RootState} from "../index";
 import {Product, ProductSKU, SKUGroup, ProductSKUSorterProps} from "../../types";
 import {EmptyObject} from "redux";
 import {productSKUSorter} from "./utils";
+import Root from "../../components/Root";
 
 
 export const selectSKUList = (sort:ProductSKUSorterProps) => (state:RootState):ProductSKU[] => {

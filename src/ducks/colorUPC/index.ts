@@ -112,6 +112,10 @@ export const saveColorUPCAction = (colorUPC: ColorUPC): ColorUPCThunkAction =>
             if (!selectIsAdmin(state) || selectLoading(state) || selectSaving(state)) {
                 return;
             }
+            if (!colorUPC.upc) {
+                const {nextUPC} = await fetchJSON('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+                colorUPC.upc = nextUPC;
+            }
             dispatch({type: saveColorUPCRequested});
             const response = await fetchJSON('/api/operations/sku/by-color', {
                 method: 'POST',
@@ -228,6 +232,7 @@ const selectedReducer = (state: ColorUPC = defaultColorUPC, action: ColorUPCActi
     switch (type) {
     case fetchColorUPCRequested:
     case fetchColorUPCSucceeded:
+    case saveColorUPCSucceeded:
         if (payload?.colorUPC) {
             return payload.colorUPC;
         }
@@ -235,6 +240,11 @@ const selectedReducer = (state: ColorUPC = defaultColorUPC, action: ColorUPCActi
     case colorUPCChanged:
         if (payload?.field) {
             return {...state, [payload.field]: payload.value}
+        }
+        return state;
+    case colorUPCSelected:
+        if (payload?.colorUPC) {
+            return {...payload.colorUPC};
         }
         return state;
     default:

@@ -104,6 +104,36 @@ export const assignNextColorUPCAction = (item: Product): ItemsThunkAction =>
         }
     };
 
+export const assignNextCustomUPCAction = (itemCode:string):ItemsThunkAction =>
+    async (dispatch, getState) => {
+        try {
+            if (!itemCode) {
+                return;
+            }
+            const state = getState();
+            if (!selectIsAdmin(state)) {
+                return;
+            }
+            if (selectAssigningItem(itemCode)(state)) {
+                return;
+            }
+            dispatch({type: itemsAssignUPCRequested, payload: {itemCode}});
+            const {nextUPC} = await fetchJSON('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+            const {colorUPC: savedItem} = await fetchJSON('/api/operations/sku/by-color', {
+                method: 'POST',
+                body: JSON.stringify({company: 'chums', ItemCode: itemCode, upc: nextUPC})
+            });
+            dispatch({type: itemsAssignUPCSucceeded, payload: {item: savedItem}});
+        } catch(err:unknown) {
+            if (err instanceof Error) {
+                console.log("assignNextCustomUPCAction()", err.message);
+                return Promise.reject(err);
+            }
+            console.log("assignNextCustomUPCAction()", err);
+            return Promise.reject(new Error('Error in ()'));
+        }
+    }
+
 export const selectItemList = (sort:ProductSorterProps) => (state: RootState): Product[] => {
     const search = selectSearch(state);
     const filterInactive = selectFilterInactive(state);

@@ -36,6 +36,9 @@ export const calcCheckDigit = (gtin:string):string => {
     if (gtin.length < 11) {
         return gtin;
     }
+    if (gtin.length === 12) {
+        return gtin.slice(0,11) + checkDigit(gtin.slice(0,11));
+    }
     if (gtin.length > 12) {
         gtin = gtin.substring(0, 11);
     }

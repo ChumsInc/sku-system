@@ -18,6 +18,8 @@ import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import CompanySelect from "../../components/CompanySelect";
 import TextArea from 'react-textarea-autosize';
 import {calcCheckDigit} from "./utils";
+import ColorUPCButton from "../items/ColorUPCButton";
+import {assignNextCustomUPCAction} from "../items";
 
 
 const ColorUPCEditor: React.FC = () => {
@@ -38,6 +40,10 @@ const ColorUPCEditor: React.FC = () => {
     const clickCheckDigitButton = () => {
         const upc = calcCheckDigit(selected.upc);
         dispatch(colorUPChangedAction('upc', upc));
+    }
+
+    const clickAssignCustomUPC = () => {
+        dispatch(assignNextCustomUPCAction(selected.ItemCode));
     }
 
     const onSubmit = (ev: FormEvent) => {
@@ -63,12 +69,24 @@ const ColorUPCEditor: React.FC = () => {
                     <small className="text-muted">{selected.ItemCodeDesc || ''}</small>
                 </FormColumn>
                 <FormColumn label="UPC">
-                    <div className="input-group input-group-sm">
-                        <input type="text" readOnly={!isAdmin} value={selected.upc || ''} required onChange={onChange('upc')}
-                               className="form-control form-control-sm"/>
-                        <button type="button" className="btn btn-sm btn-outline-secondary" onClick={clickCheckDigitButton}>
-                            <span className="bi-gear" />
-                        </button>
+                    <div className="row g3">
+                        <div className="col">
+                            <div className="input-group input-group-sm">
+                                <input type="text" readOnly={!isAdmin} value={selected.upc || ''} onChange={onChange('upc')}
+                                       className="form-control form-control-sm"/>
+                                <button type="button" className="btn btn-sm btn-outline-secondary"
+                                        title="Calculate Check Digit"
+                                        onClick={clickCheckDigitButton}>
+                                    <span className="bi-gear" />
+                                </button>
+                            </div>
+                        </div>
+                        <div className="col-auto">
+                            <button type="button" className="btn btn-sm btn-outline-secondary" disabled={!isAdmin}
+                                    onClick={clickAssignCustomUPC} title="Custom UPC for customer">
+                                <span className="bi-house-gear-fill" />
+                            </button>
+                        </div>
                     </div>
                     <small className="text-muted">Leave blank to assign the next by-color UPC.</small>
                 </FormColumn>

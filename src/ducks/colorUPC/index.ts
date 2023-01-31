@@ -5,6 +5,7 @@ import {ThunkAction} from "redux-thunk";
 import {RootState} from "../index";
 import {colorUPCSorter, defaultColorUPCSort} from "./utils";
 import {selectIsAdmin} from "../users";
+import {itemsAssignUPCSucceeded} from "../items";
 
 export interface ColorUPCPayload extends ActionPayload {
     list?: ColorUPC[],

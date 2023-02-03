@@ -1,13 +1,16 @@
-import {Product, ProductSKU, ProductSKUSorterProps, ProductSorterProps} from "../../types";
+import {Product} from "../../types";
+import {SortProps} from "chums-components";
+import {BaseSKU} from "chums-types";
 
-export const defaultSort:ProductSKUSorterProps = {
+export const defaultSort: SortProps<BaseSKU> = {
     field: "id",
     ascending: true,
 }
 
-export const productSKUKey = (sku:ProductSKU) => sku.id;
-export const productSKUSorter = ({field, ascending}:ProductSKUSorterProps) => 
-    (a:ProductSKU, b:ProductSKU) => {
+export const productSKUKey = (sku: BaseSKU) => sku.id ?? sku.Category4;
+
+export const productSKUSorter = ({field, ascending}: SortProps<BaseSKU>) =>
+    (a: BaseSKU, b: BaseSKU) => {
         const aVal = a[field] || '';
         const bVal = b[field] || '';
         return (
@@ -17,14 +20,15 @@ export const productSKUSorter = ({field, ascending}:ProductSKUSorterProps) =>
         ) * (ascending ? 1 : -1);
     }
 
-export const defaultItemSort:ProductSorterProps = {
+export const defaultItemSort: SortProps<Product> = {
     field: 'ItemCode',
     ascending: true,
 }
 
-export const productKey = (item:Product) => item.ItemCode;
-export const productSorter = ({field, ascending}:ProductSorterProps) =>
-    (a:Product, b:Product) => {
+export const productKey = (item: Product) => item.ItemCode;
+
+export const productSorter = ({field, ascending}: SortProps<Product>) =>
+    (a: Product, b: Product) => {
         const aVal = a[field] || '';
         const bVal = b[field] || '';
         return (

@@ -1,151 +1,121 @@
-import {combineReducers, EmptyObject} from 'redux';
-import {Product, ProductSKU, SKUGroup, ProductSKUList} from "../../types";
+import {combineReducers} from 'redux';
+import {defaultSort, productSKUSorter} from "./utils";
+import {CurrentValueState, initialCurrentValueState, initialListState, ListState} from "../redux-utils";
+import {createReducer} from "@reduxjs/toolkit";
 import {
-    newProductSKU,
-    SKUAction,
-    skuFetchListFailed, skuFetchListRequested,
-    skuFetchListSucceeded, skuFetchSKUFailed,
-    skuFetchSKURequested,
-    skuFetchSKUSucceeded, skuFilterInactiveChanged,
-    skuGroupSelected, skuSaveSKUFailed, skuSaveSKURequested, skuSaveSKUSucceeded, skuSearchChanged,
-    skuSelected,
-    skuSelectedChanged
-} from "./actionTypes";
-import {defaultItemSort, productSorter} from "./utils";
+    loadSKU,
+    loadSKUList,
+    saveSKU,
+    setPage,
+    setRowsPerPage,
+    setSearch,
+    setSKUGroupFilter,
+    setSort,
+    toggleFilterInactive
+} from "./actions";
+import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
+import {BaseSKU, SKUGroup} from "chums-types";
+import {QueryStatus} from "@reduxjs/toolkit/query";
 
 
-const searchReducer = (state: string = '', action:SKUAction):string => {
-    const {type, payload} = action;
-    switch (type) {
-    case skuSearchChanged:
-        return payload?.search || '';
-    default: return state;
-    }
+export interface SKUListState extends ListState<BaseSKU> {
+    skuGroup: SKUGroup | null,
 }
 
-const filterInactiveReducer = (state: boolean = true, action:SKUAction):boolean => {
-    switch (action.type) {
-    case skuFilterInactiveChanged:
-        return !state;
-    default: return state;
-    }
+const initialSKUListState = (): SKUListState => ({
+    ...initialListState,
+    values: [],
+    sort: {...defaultSort},
+    rowsPerPage: getPreference(localStorageKeys.skuListRowsPerPage, 25),
+    skuGroup: null,
+})
+
+const initialCurrentSKUState: CurrentValueState<BaseSKU> = {
+    ...initialCurrentValueState,
 }
 
-const listReducer = (state: ProductSKUList = {}, action: SKUAction):ProductSKUList => {
-    const {type, payload} = action;
-    switch (type) {
-    case skuFetchListSucceeded:
-        if (payload?.list) {
-            const skuList: ProductSKUList = {};
-            payload.list.forEach(sku => {
-                skuList[sku.id] = sku;
-            });
-            return skuList;
-        }
-        return state;
-    case skuSaveSKUSucceeded:
-    case skuFetchSKUSucceeded:
-        if (payload?.sku) {
-            return {
-                ...state,
-                [payload.sku.id]: payload.sku,
+const skuListReducer = createReducer(initialSKUListState, (builder) => {
+    builder
+        .addCase(setSearch, (state, action) => {
+            state.search = action.payload;
+        })
+        .addCase(toggleFilterInactive, (state, action) => {
+            state.filterInactive = action.payload ?? !state.filterInactive;
+        })
+        .addCase(setPage, (state, action) => {
+            state.page = action.payload;
+        })
+        .addCase(setRowsPerPage, (state, action) => {
+            setPreference<number>(localStorageKeys.skuListRowsPerPage, action.payload);
+            state.rowsPerPage = action.payload;
+        })
+        .addCase(setSort, (state, action) => {
+            state.sort = action.payload;
+        })
+        .addCase(loadSKUList.pending, (state) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadSKUList.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.values = action.payload.sort(productSKUSorter(defaultSort));
+        })
+        .addCase(loadSKUList.rejected, (state, action) => {
+            state.loading = QueryStatus.rejected
+        })
+        .addCase(setSKUGroupFilter, (state, action) => {
+            state.skuGroup = action.payload ?? null;
+        })
+        .addCase(loadSKU.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(row => row.Category4 === action.payload?.Category4),
+                    action.payload,
+                ]
             }
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const selectedReducer = (state = newProductSKU, action: SKUAction): ProductSKU => {
-    const {type, payload} = action;
-    switch (type) {
-    case skuFetchSKURequested:
-    case skuSelected:
-    case skuFetchSKUSucceeded:
-    case skuSaveSKUSucceeded:
-        if (payload?.sku) {
-            return {...payload.sku};
-        }
-        return state;
-    case skuSelectedChanged:
-        if (payload?.field) {
-            return {...state, [payload.field]: payload.value}
-        }
-        return state;
-    case skuGroupSelected:
-        if (payload?.group) {
-            return {...newProductSKU, sku_group_id: payload.group.id}
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const selectedLoadingReducer = (state: boolean = false, action: SKUAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case skuFetchSKURequested:
-        return true;
-    case skuFetchSKUSucceeded:
-    case skuFetchSKUFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-const loadingReducer = (state: boolean = false, action: SKUAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case skuFetchListRequested:
-        return true;
-    case skuFetchListSucceeded:
-    case skuFetchListFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-
-
-const savingReducer = (state: boolean = false, action: SKUAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case skuSaveSKURequested:
-        return true;
-    case skuSaveSKUSucceeded:
-    case skuSaveSKUFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-const selectedGroupReducer = (state: SKUGroup | null = null, action: SKUAction): SKUGroup | null => {
-    const {type, payload} = action;
-    switch (type) {
-    case skuGroupSelected:
-        if (payload?.group) {
-            return {...payload.group};
-        }
-        return null;
-    default:
-        return state;
-    }
-};
-
-
-
-export default combineReducers({
-    search: searchReducer,
-    filterInactive: filterInactiveReducer,
-    list: listReducer,
-    selected: selectedReducer,
-    selectedLoading: selectedLoadingReducer,
-    loading: loadingReducer,
-    saving: savingReducer,
-    selectedGroup: selectedGroupReducer,
+        })
+        .addCase(saveSKU.fulfilled, (state, action) => {
+            state.values = [
+                ...state.values.filter(row => row.Category4 === action.payload.Category4),
+                action.payload,
+            ];
+        })
 });
+
+const currentSKUReducer = createReducer(initialCurrentSKUState, (builder) => {
+    builder
+        .addCase(loadSKUList.fulfilled, (state, action) => {
+            if (state.value) {
+                const [value] = action.payload.filter(row => row?.id === state.value?.id)
+                if (value) {
+                    state.value = value;
+                }
+            }
+        })
+        .addCase(loadSKU.pending, (state) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadSKU.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(loadSKU.rejected, (state) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(saveSKU.pending, (state) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(saveSKU.fulfilled, (state, action) => {
+            state.saving = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(saveSKU.rejected, (state) => {
+            state.saving = QueryStatus.rejected;
+        })
+});
+
+const skuReducer = combineReducers({
+    list: skuListReducer,
+    current: currentSKUReducer,
+});
+
+export default skuReducer;

@@ -1,60 +1,67 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent} from 'react';
-import classNames from 'classnames';
-import {useDispatch, useSelector} from "react-redux";
+import React, {ChangeEvent, FormEvent, useState} from 'react';
+import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {colorChanged, colorChangedAction, saveColorAction, selectColor} from "./index";
-import {ProductColorField} from "../../types";
-import {Alert, FormColumn} from "chums-ducks";
+import {saveProductColor, selectCurrentColor} from "./index";
+import {Alert, FormColumn} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
+import {defaultProductColor} from "../../api/color";
+import {Editable, ProductColor} from "chums-types";
+import {useAppDispatch} from "../../app/configureStore";
 
 
 const ColorEditor: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
-    const selected = useSelector(selectColor);
+    const selected = useSelector(selectCurrentColor);
 
-    const onChangeCode = (ev:ChangeEvent<HTMLInputElement>) => dispatch(colorChangedAction('code', ev.target.value.toUpperCase()));
+    const [color, setColor] = useState<ProductColor & Editable>(selected ?? {...defaultProductColor})
 
-    const onChange = (field: ProductColorField) => (ev: ChangeEvent<HTMLInputElement|HTMLTextAreaElement>) => {
-        dispatch(colorChangedAction(field, ev.target.value));
+    const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => {
+        setColor({...color, code: ev.target.value.toUpperCase(), changed: true});
+
+    }
+    const onChange = (field: keyof ProductColor) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setColor({...color, [field]: ev.target.value, changed: true})
     }
 
-    const onChangeActive = () => dispatch(colorChangedAction('active', !selected.active));
+    const onChangeActive = (active: boolean) => {
+        setColor({...color, active, changed: true})
+    }
 
     const onSubmit = (ev: FormEvent) => {
         ev.preventDefault();
-        dispatch(saveColorAction(selected));
+        dispatch(saveProductColor(color));
     }
 
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Color Editor</h3>
             <FormColumn label="Code">
-                <input type="text" readOnly={!isAdmin} value={selected.code}
+                <input type="text" readOnly={!isAdmin} value={color.code}
                        className="form-control form-control-sm"
                        pattern="\S{3,5}" maxLength={5} title="3-5 Characters"
-                       onChange={onChangeCode} />
+                       onChange={onChangeCode}/>
                 <small className="text-muted">3-5 Characters</small>
             </FormColumn>
             <FormColumn label="Description">
-                <input type="text" readOnly={!isAdmin} value={selected.description}
+                <input type="text" readOnly={!isAdmin} value={color.description}
                        className="form-control form-control-sm"
-                       onChange={onChange('description')} />
+                       onChange={onChange('description')}/>
             </FormColumn>
             <FormColumn label="Notes">
-                <textarea readOnly={!isAdmin} value={selected.notes || ''} onChange={onChange('notes')}
-                          className="form-control form-control-sm" />
+                <textarea readOnly={!isAdmin} value={color.notes || ''} onChange={onChange('notes')}
+                          className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">
-                <ActiveButtonGroup active={selected.active} onChange={onChangeActive} disabled={!isAdmin}/>
+                <ActiveButtonGroup active={color.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
                 <button type="submit" className="btn btn-sm btn-primary">Save</button>
             </FormColumn>
-            {selected.changed && (
+            {color.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>
             )}
         </form>

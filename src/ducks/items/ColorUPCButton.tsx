@@ -1,17 +1,18 @@
 import React from "react";
-import {useDispatch, useSelector} from "react-redux";
-import {assignNextColorUPCAction, selectAssigningItem} from "./index";
+import {useSelector} from "react-redux";
+import {assignNextColorUPCAction, selectAssigningItems} from "./index";
 import {Product} from "../../types";
-import GTIN from "../../GTIN";
-import {SpinnerButton} from "chums-ducks";
+import {SpinnerButton} from "chums-components";
+import {useAppDispatch} from "../../app/configureStore";
+import {formatGTIN} from "@chumsinc/gtin-tools";
 
 export interface ColorUPCButtonProps {
     item: Product,
 }
 
-const ColorUPCButton:React.FC<ColorUPCButtonProps> = ({item}) => {
-    const dispatch = useDispatch();
-    const loading = useSelector(selectAssigningItem(item.ItemCode));
+export default function ColorUPCButton({item}: ColorUPCButtonProps) {
+    const dispatch = useAppDispatch();
+    const assigning = useSelector(selectAssigningItems);
 
     const clickHandler = () => {
         console.log(item);
@@ -20,19 +21,18 @@ const ColorUPCButton:React.FC<ColorUPCButtonProps> = ({item}) => {
 
     if (item.UDF_UPC_BY_COLOR) {
         return (
-            <span>{GTIN.format(item.UDF_UPC_BY_COLOR)}</span>
+            <span>{formatGTIN(item.UDF_UPC_BY_COLOR)}</span>
         )
     }
 
     if (item.InactiveItem === 'Y' || item.ProductType === 'D') {
-        return (<span className="bi-x-lg" />)
+        return (<span className="bi-x-lg"/>)
     }
 
     return (
-        <SpinnerButton spinning={loading} color="outline-success" className="btn-xs"
+        <SpinnerButton spinning={assigning.includes(item.ItemCode)} color="outline-success" className="btn-xs"
                        onClick={clickHandler}>
-            {!loading && (<span className="bi-gear-fill"/>)}
+            {!assigning.includes(item.ItemCode) && (<span className="bi-gear-fill"/>)}
         </SpinnerButton>
     )
 }
-export default ColorUPCButton;

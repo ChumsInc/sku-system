@@ -1,13 +1,10 @@
-import {Category, CategorySorterProps} from "../../types";
+import {SortProps} from "chums-components";
+import {ProductCategory} from "chums-types";
 
-export const defaultCategorySort: CategorySorterProps = {
-    field: "code",
-    ascending: true,
-}
+export const categoryKey = (cat?: ProductCategory | null) => [cat?.code, cat?.productLine].join(':');
 
-export const categoryKey = (cat: Category) => [cat.code, cat.productLine].join(':');
-export const categorySorter = ({field, ascending}: CategorySorterProps) =>
-    (a: Category, b: Category) => {
+export const categorySorter = ({field, ascending}: SortProps<ProductCategory>) =>
+    (a: ProductCategory, b: ProductCategory) => {
         if (field === 'tags') {
             return 0;
         }

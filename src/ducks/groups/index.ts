@@ -1,27 +1,21 @@
-import {ActionInterface, ActionPayload, buildPath, fetchJSON} from "chums-ducks";
-import {ProductMix, ProductMixField, SKUGroup, SKUGroupField, SKUGroupSorterProps} from "../../types";
-import {ThunkAction} from "redux-thunk";
-import {RootState} from "../index";
-import {selectIsAdmin} from "../users";
 import {combineReducers} from "redux";
-import {settingsFetchRequested, fetchSettingsSucceeded} from "../settings";
-import {mixChanged, mixesFilterInactiveChanged, mixesSearchChanged} from "../mixes";
+import {SortProps} from "chums-components";
+import {QueryStatus} from "@reduxjs/toolkit/query";
+import {createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {SKUGroup} from "chums-types";
+import {
+    createDefaultListActions,
+    CurrentValueState,
+    initialCurrentValueState,
+    initialListState,
+    ListState
+} from "../redux-utils";
+import {fetchSKUGroup, fetchSKUGroups, postSKUGroup} from "../../api/skuGroups";
+import {RootState} from "../../app/configureStore";
+import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
+import {selectIsAdmin} from "../users";
 
-export interface SKUGroupPayload extends ActionPayload {
-    group?: SKUGroup,
-    skuGroups?: SKUGroup[],
-    search?: string,
-    field?: SKUGroupField,
-    value?: unknown
-}
-
-export interface SKUGroupAction extends ActionInterface {
-    payload?: SKUGroupPayload,
-}
-
-export interface SKUGroupThunkAction extends ThunkAction<any, RootState, unknown, SKUGroupAction> {
-}
-
+export const defaultSkuGroupSort: SortProps<SKUGroup> = {field: 'id', ascending: true};
 
 export const defaultSKUGroup: SKUGroup = {
     id: 0,
@@ -33,100 +27,100 @@ export const defaultSKUGroup: SKUGroup = {
     productLine: '',
 }
 
-const groupsSearchChanged = 'groups/searchChanged';
-const groupsFilterInactiveChanged = 'groups/filterInactiveChanged';
+export const initialSKUGroupListState = (): ListState<SKUGroup> => ({
+    ...initialListState,
+    rowsPerPage: getPreference<number>(localStorageKeys.groupsRowsPerPage, 25),
+    sort: {...defaultSkuGroupSort}
+});
 
-const fetchListRequested = 'groups/fetchRequested';
-const fetchListSucceeded = 'groups/fetchSucceeded';
-const fetchListFailed = 'groups/fetchFailed';
+export const initialCurrentSKUGroup: CurrentValueState<SKUGroup> = {
+    ...initialCurrentValueState,
+}
 
-const groupSelected = 'groups/selected';
-const groupChanged = 'groups/selected/groupChanged';
+export const {
+    setSearch,
+    setPage,
+    setRowsPerPage,
+    toggleFilterInactive,
+    setSort
+} = createDefaultListActions<SKUGroup>('skuGroup/list');
 
-const fetchGroupRequested = 'groups/selected/fetchRequested';
-const fetchGroupSucceeded = 'groups/selected/fetchSucceeded';
-const fetchGroupFailed = 'groups/selected/fetchFailed';
+export const selectSearch = (state: RootState) => state.skuGroups.list.search;
+export const selectFilterInactive = (state: RootState) => state.skuGroups.list.filterInactive;
+export const selectList = (state: RootState): SKUGroup[] => state.skuGroups.list.values;
+export const selectPage = (state: RootState) => state.skuGroups.list.page;
+export const selectRowsPerPage = (state: RootState) => state.skuGroups.list.rowsPerPage;
+export const selectSort = (state: RootState) => state.skuGroups.list.sort;
 
-
-const saveGroupRequested = 'groups/selected/saveRequested';
-const saveGroupSucceeded = 'groups/selected/saveSucceeded';
-const saveGroupFailed = 'groups/selected/saveFailed';
-
-export const searchChangedAction = (search: string) => ({type: groupsSearchChanged, payload: {search}});
-export const filterInactiveChangedAction = () => ({type: groupsFilterInactiveChanged});
-export const mixChangedAction = (field:SKUGroupField, value: unknown) => ({type: groupChanged, payload: {field, value}});
-
-export const fetchGroupAction = (group:SKUGroup): SKUGroupThunkAction =>
-    async (dispatch, getState) => {
+export const selectFilteredList = createSelector(
+    [selectList, selectSearch, selectFilterInactive, selectSort],
+    (list, search, filterInactive, sort) => {
+        let re = /^/i;
         try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            if (!group.id) {
-                return dispatch({type: groupSelected, payload: {group}});
-            }
-            dispatch({type: fetchGroupRequested});
-            const url = buildPath('/api/operations/sku/groups/:id', {id: group.id});
-            const {list = []} = await fetchJSON(url, {cache: 'no-cache'});
-            dispatch({type: fetchGroupSucceeded, payload: {group: list[0] || defaultSKUGroup}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchGroupsAction()", error.message);
-                return dispatch({type: fetchListFailed, payload: {error, context: fetchGroupRequested}})
-            }
-            console.error("fetchGroupsAction()", error);
+            re = new RegExp(search, 'i');
+        } catch (err) {
         }
-    };
 
-export const fetchListAction = (): SKUGroupThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            dispatch({type: fetchListRequested});
-            const {list = []} = await fetchJSON('/api/operations/sku/groups', {cache: 'no-cache'});
-            dispatch({type: fetchListSucceeded, payload: {skuGroups: list}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchGroupsAction()", error.message);
-                return dispatch({type: fetchListFailed, payload: {error, context: fetchListRequested}})
-            }
-            console.error("fetchGroupsAction()", error);
+        return list
+            .filter(group => !filterInactive || group.active)
+            .filter(group => re.test(group.code) || re.test(group.description) || re.test(group.notes || ''))
+            .sort(skuGroupSorter(sort));
+    }
+)
+
+export const selectGroupsCount = (state: RootState) => state.skuGroups.list.values.length;
+export const selectActiveGroupsCount = (state: RootState) => state.skuGroups.list.values.filter(g => g.active).length;
+export const selectCurrentSKUGroup = (state: RootState) => state.skuGroups.current.value;
+export const selectListLoading = (state: RootState) => state.skuGroups.list.loading === QueryStatus.pending;
+export const selectListLoaded = (state: RootState) => state.skuGroups.list.loaded;
+export const selectLoading = (state: RootState) => state.skuGroups.current.loading === QueryStatus.pending;
+export const selectSaving = (state: RootState) => state.skuGroups.current.saving === QueryStatus.pending;
+
+
+export const loadSKUGroup = createAsyncThunk<SKUGroup | null, SKUGroup>(
+    'skuGroup/current/load',
+    async (arg) => {
+        return await fetchSKUGroup(arg.id);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectLoading(state) && !selectSaving(state);
         }
-    };
+    }
+)
 
-export const groupChangedAction = (field: SKUGroupField, value: unknown): SKUGroupAction =>
-    ({type: groupChanged, payload: {field, value}});
 
-export const saveGroupAction = (group: SKUGroup): SKUGroupThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (!selectIsAdmin(state) || selectLoading(state) || selectSaving(state)) {
-                return;
-            }
-            dispatch({type: saveGroupRequested});
-            const response = await fetchJSON('/api/operations/sku/groups', {
-                method: 'POST',
-                body: JSON.stringify(group)
-            });
-            dispatch({type: saveGroupSucceeded, payload: {group: response.group}})
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("saveGroupAction()", error.message);
-                return dispatch({type: saveGroupFailed, payload: {error, context: saveGroupRequested}})
-            }
-            console.error("saveGroupAction()", error);
+export const loadSKUGroupList = createAsyncThunk<SKUGroup[]>(
+    'skuGroups/list/load',
+    async () => {
+        return await fetchSKUGroups();
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectListLoading(state);
         }
-    };
+    }
+)
 
-export const defaultSort: SKUGroupSorterProps = {field: 'code', ascending: true};
+export const saveSKUGroup = createAsyncThunk<SKUGroup, SKUGroup>(
+    'skuGroups/current/save',
+    async (arg) => {
+        return await postSKUGroup(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return selectIsAdmin(state) && !selectLoading(state) && !selectSaving(state);
+        }
+    }
+)
+
+export const defaultSort: SortProps<SKUGroup> = {field: 'code', ascending: true};
 
 export const skuGroupKey = (group: SKUGroup) => group.id;
-export const skuGroupSorter = ({field, ascending}: SKUGroupSorterProps) =>
+export const skuGroupSorter = ({field, ascending}: SortProps<SKUGroup>) =>
     (a: SKUGroup, b: SKUGroup) => {
         if (field === 'tags') {
             return 0;
@@ -140,147 +134,84 @@ export const skuGroupSorter = ({field, ascending}: SKUGroupSorterProps) =>
         ) * (ascending ? 1 : -1);
     }
 
+const skuGroupListReducer = createReducer(initialSKUGroupListState, (builder) => {
+    builder
+        .addCase(setSearch, (state, action) => {
+            state.search = action.payload;
+        })
+        .addCase(toggleFilterInactive, (state, action) => {
+            state.filterInactive = action.payload ?? !state.filterInactive;
+        })
+        .addCase(setPage, (state, action) => {
+            state.page = action.payload;
+        })
+        .addCase(setRowsPerPage, (state, action) => {
+            state.rowsPerPage = action.payload;
+            setPreference<number>(localStorageKeys.groupsRowsPerPage, action.payload);
+        })
+        .addCase(setSort, (state, action) => {
+            state.sort = action.payload;
+        })
+        .addCase(loadSKUGroupList.pending, (state, action) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadSKUGroupList.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.values = action.payload.sort(skuGroupSorter(defaultSort));
+        })
+        .addCase(loadSKUGroupList.typePrefix, (state) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(loadSKUGroup.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(group => group.id !== action.payload?.id),
+                    action.payload
+                ]
+            }
+        })
+        .addCase(saveSKUGroup.fulfilled, (state, action) => {
+            state.values = [
+                ...state.values.filter(group => group.id !== action.payload.id),
+                action.payload
+            ]
+        })
+});
 
-export const selectSearch = (state: RootState) => state.groups.search;
-export const selectFilterInactive = (state: RootState) => state.groups.filterInactive;
-export const selectList = (state:RootState):SKUGroup[] => state.groups.list.sort(skuGroupSorter(defaultSort));
-export const selectSortedList = (sort: SKUGroupSorterProps) => (state: RootState): SKUGroup[] => {
-    const search = selectSearch(state);
-    const filterInactive = selectFilterInactive(state);
+const currentSKUGroupReducer = createReducer(initialCurrentSKUGroup, (builder) => {
+    builder
+        .addCase(loadSKUGroupList.fulfilled, (state, action) => {
+            const [current] = action.payload.filter(group => group.id === state.value?.id);
+            if (current) {
+                state.value = current;
+            }
+        })
+        .addCase(loadSKUGroup.pending, (state) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadSKUGroup.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(loadSKUGroup.rejected, (state) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(saveSKUGroup.pending, (state) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(saveSKUGroup.fulfilled, (state, action) => {
+            state.saving = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(saveSKUGroup.rejected, (state) => {
+            state.saving = QueryStatus.rejected;
+        })
+});
 
-    let re = /^/i;
-    try {
-        re = new RegExp(search, 'i');
-    } catch (err) {
-    }
+const skuGroupsReducer = combineReducers({
+    list: skuGroupListReducer,
+    current: currentSKUGroupReducer,
+});
 
-    return state.groups.list
-        .filter(group => !filterInactive || group.active)
-        .filter(group => re.test(group.code) || re.test(group.description) || re.test(group.notes || ''))
-        .sort(skuGroupSorter(sort));
-}
-export const selectGroupsCount = (state:RootState) => state.groups.list.length;
-export const selectActiveGroupsCount = (state:RootState) => state.groups.list.filter(g => g.active).length;
-export const selectSelectedSKUGroup = (state: RootState): SKUGroup => state.groups.selected || {...defaultSKUGroup};
-export const selectLoading = (state: RootState) => state.groups.loading;
-export const selectSaving = (state: RootState) => state.groups.saving;
 
-const searchReducer = (state: string = '', action: SKUGroupAction): string => {
-    const {type, payload} = action;
-    switch (type) {
-    case groupsSearchChanged:
-        return payload?.search || '';
-    default:
-        return state;
-    }
-}
-
-const filterInactiveReducer = (state: boolean = true, action: SKUGroupAction): boolean => {
-    switch (action.type) {
-    case groupsFilterInactiveChanged:
-        return !state;
-    default:
-        return state;
-    }
-}
-
-const listReducer = (state: SKUGroup[] = [], action: SKUGroupAction): SKUGroup[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-    case fetchListSucceeded:
-        if (payload?.skuGroups) {
-            return payload.skuGroups.sort(skuGroupSorter(defaultSort));
-        }
-        return [];
-    case fetchGroupSucceeded:
-    case saveGroupSucceeded:
-        if (payload?.group) {
-            return [
-                ...state.filter(group => group.id !== payload.group?.id),
-                payload.group
-            ];
-        }
-        return state;
-    default:
-        return state;
-    }
-}
-
-const selectedReducer = (state: SKUGroup = defaultSKUGroup, action: SKUGroupAction): SKUGroup => {
-    const {type, payload} = action;
-    switch (type) {
-    case fetchGroupSucceeded:
-    case saveGroupSucceeded:
-    case groupSelected:
-        if (payload?.group) {
-            return {...payload.group};
-        }
-        return {...defaultSKUGroup};
-    case fetchListSucceeded:
-        if (state && payload?.skuGroups) {
-            const [group] = payload.skuGroups.filter(g => g.id === state.id);
-            return {...group};
-        }
-        return state;
-
-    case groupChanged:
-        if (state && payload?.field) {
-            return {...state, [payload.field]: payload.value, changed: true}
-        }
-        return state;
-    default:
-        return state;
-    }
-}
-
-const loadingReducer = (state: boolean = false, action: SKUGroupAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchListRequested:
-        return true;
-    case fetchListSucceeded:
-    case fetchListFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-const selectedLoadingReducer = (state: boolean = false, action: SKUGroupAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchGroupRequested:
-        return true;
-    case fetchGroupSucceeded:
-    case fetchGroupFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-const savingReducer = (state: boolean = false, action: SKUGroupAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case saveGroupRequested:
-        return true;
-    case saveGroupSucceeded:
-    case saveGroupFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-export default combineReducers({
-    search: searchReducer,
-    filterInactive: filterInactiveReducer,
-    list: listReducer,
-    loading: loadingReducer,
-    saving: savingReducer,
-    selected: selectedReducer,
-    selectedLoading: selectedLoadingReducer,
-})
+export default skuGroupsReducer;

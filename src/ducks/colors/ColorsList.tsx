@@ -1,50 +1,71 @@
 import React, {useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
+import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
+import {ProductColor} from "chums-types";
 import {
-    addPageSetAction,
-    PagerDuck,
-    selectPagedData,
-    selectTableSort,
-    SortableTable,
-    tableAddedAction
-} from "chums-ducks";
-import {ProductColor, ProductColorField, ProductColorTableField, ProductSorterProps} from "../../types";
-import {fetchColorAction, selectColor, selectColorsCount, selectColorsList} from "./index";
+    loadColorsList,
+    loadProductColor,
+    selectColorsList,
+    selectColorsListLoaded,
+    selectCurrentColor,
+    selectSort,
+    setPage,
+    setRowsPerPage,
+    setSort
+} from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
+import {selectPage, selectRowsPerPage} from "../colorUPC";
+import {useAppDispatch} from "../../app/configureStore";
 
 const tableId = 'colors-list';
 
-const fields:ProductColorTableField[] = [
+const fields: SortableTableField<ProductColor>[] = [
     {field: 'code', title: 'Code', sortable: true},
     {field: 'description', title: 'Description', sortable: true},
-    {field: 'notes', title: 'Notes', sortable: true, render: ({notes}) => (<TrimmedText text={notes} length={65}/>)}
+    {
+        field: 'notes',
+        title: 'Notes',
+        sortable: true,
+        render: ({notes}) => (<TrimmedText text={notes ?? ''} length={65}/>)
+    }
 
 ]
 
-const rowClassName = (row:ProductColor) => classNames({'table-danger': !row.active});
+const rowClassName = (row: ProductColor) => classNames({'table-danger': !row.active});
 
-const ColorsList:React.FC = () => {
-    const dispatch = useDispatch();
-    const sort = useSelector(selectTableSort(tableId)) as ProductSorterProps;
-    const list = useSelector(selectColorsList(sort));
-    const listLength = useSelector(selectColorsCount);
-    const pagedList = useSelector(selectPagedData(tableId, list));
-    const selected = useSelector(selectColor);
-
-    const onSelectRow = (row:ProductColor) => dispatch(fetchColorAction(row));
+const ColorsList: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const sort = useSelector(selectSort);
+    const list = useSelector(selectColorsList);
+    const page = useSelector(selectPage);
+    const rowsPerPage = useSelector(selectRowsPerPage);
+    const selected = useSelector(selectCurrentColor);
+    const loaded = useSelector(selectColorsListLoaded);
 
     useEffect(() => {
-        dispatch(tableAddedAction({key: tableId, field: 'ItemCode', ascending: true}));
-        dispatch(addPageSetAction({key: tableId}));
+        if (!loaded) {
+            dispatch(loadColorsList());
+        }
     }, []);
+
+    const onSelectRow = (row: ProductColor) => dispatch(loadProductColor(row));
+    const pageChangeHandler = (page: number) => dispatch(setPage(page));
+    const rowsPerPageChangeHandler = (rpp: number) => dispatch(setRowsPerPage(rpp));
+    const sortChangeHandler = (sort: SortProps<ProductColor>) => dispatch(setSort(sort));
 
     return (
         <>
-            <SortableTable tableKey={tableId} keyField="id" fields={fields} data={pagedList} size="xs"
+            <SortableTable keyField="id" fields={fields}
+                           data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                           currentSort={sort}
+                           onChangeSort={sortChangeHandler}
+                           size="xs"
                            rowClassName={rowClassName}
-                           selected={selected.id} onSelectRow={onSelectRow} />
-            <PagerDuck dataLength={list.length} filtered={list.length !== listLength} pageKey={tableId} />
+                           selected={selected?.id} onSelectRow={onSelectRow}/>
+            <TablePagination page={page} onChangePage={pageChangeHandler}
+                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
+                             count={list.length}/>
         </>
     )
 }

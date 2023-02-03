@@ -1,11 +1,11 @@
 import React, {ChangeEvent} from "react";
-import {Select} from "chums-ducks";
+import {Select} from "chums-components";
 import {useSelector} from "react-redux";
 import {selectList} from "./index";
 import {SKUGroup} from "../../types";
 
 export interface SKUGroupSelectProps {
-    value?: number,
+    value?: number|null,
     className?: string,
     showInactive?: boolean,
     allowAllGroups?: boolean,

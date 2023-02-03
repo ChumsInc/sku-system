@@ -1,63 +1,82 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent} from 'react';
-import {useDispatch, useSelector} from "react-redux";
+import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {categoryChangedAction, saveCategoryAction, selectCategory} from "./index";
-import {CategoryField} from "../../types";
-import {Alert, FormColumn} from "chums-ducks";
+import {saveCategory, selectCurrentCategory} from "./index";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
+import {useAppDispatch} from "../../app/configureStore";
+import {Editable, ProductCategory} from "chums-types";
+import {Alert, FormColumn} from "chums-components";
+import {defaultCategory} from "../../api/categories";
 
 
 const CategoriesEditor: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
-    const selected = useSelector(selectCategory);
+    const selected = useSelector(selectCurrentCategory);
+    const [category, setCategory] = useState<ProductCategory & Editable>(selected ?? {...defaultCategory});
 
-    const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => dispatch(categoryChangedAction('code', ev.target.value.toUpperCase()));
+    useEffect(() => {
+        setCategory(selected ?? {...defaultCategory});
+    }, [selected])
 
-
-    const onChange = (field: CategoryField) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        dispatch(categoryChangedAction(field, ev.target.value));
+    const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => {
+        const code = ev.target.value.toUpperCase();
+        setCategory({...category, code, changed: category.changed || code !== selected?.code});
     }
 
-    const onChangeActive = () => dispatch(categoryChangedAction('active', !selected.active));
+
+    const onChange = (field: keyof ProductCategory) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const value = ev.target.value;
+        const currentValue = !!selected ? (selected[field] ?? null) : null;
+
+        setCategory({
+            ...category,
+            [field]: value,
+            changed: category.changed || currentValue !== value,
+        })
+    }
+
+    const onChangeActive = (active: boolean) => {
+        setCategory({...category, active, changed: true});
+    }
 
     const onSubmit = (ev: FormEvent) => {
         ev.preventDefault();
-        dispatch(saveCategoryAction(selected));
+        dispatch(saveCategory(category));
     }
 
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Category Editor</h3>
             <FormColumn label="Code">
-                <input type="text" readOnly={!isAdmin} value={selected.code}
+                <input type="text" readOnly={!isAdmin} value={category.code}
                        className="form-control form-control-sm" minLength={2} maxLength={10}
                        onChange={onChangeCode}/>
                 <small className="text-muted">2-10 Characters</small>
             </FormColumn>
             <FormColumn label="Description">
-                <input type="text" readOnly={!isAdmin} value={selected.description}
+                <input type="text" readOnly={!isAdmin} value={category.description ?? ''}
                        className="form-control form-control-sm"
                        onChange={onChange('description')}/>
             </FormColumn>
             <FormColumn label="Product Line">
-                <ProductLineSelect value={selected.productLine} onChange={onChange('productLine')}/>
+                <ProductLineSelect value={category.productLine ?? ''} onChange={onChange('productLine')}/>
             </FormColumn>
             <FormColumn label="Notes">
-                <textarea readOnly={!isAdmin} value={selected.notes || ''} onChange={onChange('notes')}
+                <textarea readOnly={!isAdmin} value={category.notes ?? ''} onChange={onChange('notes')}
                           className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">
-                <ActiveButtonGroup active={selected.active} onChange={onChangeActive} disabled={!isAdmin}/>
+                <ActiveButtonGroup active={category.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
                 <button type="submit" className="btn btn-sm btn-primary">Save</button>
             </FormColumn>
-            {selected.changed && (
+            {category.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>
             )}
         </form>

@@ -1,32 +1,32 @@
 import React, {ChangeEvent} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {
-    defaultCategory,
-    fetchCategoryAction,
-    fetchListAction,
-    filterInactiveChangedAction,
-    searchChangedAction,
+    categoriesToggleFilterInactive,
+    loadCategoryList,
     selectActiveCategoriesCount,
     selectCategoriesCount,
     selectFilterInactive,
-    selectLoading,
-    selectSearch
+    selectCategoryListLoading,
+    selectSearch,
+    setCategoriesSearch,
+    setNewCategory
 } from "./index";
-import {SpinnerButton} from "chums-ducks";
+import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
+import {useAppDispatch} from "../../app/configureStore";
 
 const CategoriesFilter: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);
     const categoriesCount = useSelector(selectCategoriesCount);
     const activeCategoriesCount = useSelector(selectActiveCategoriesCount);
-    const loading = useSelector(selectLoading);
+    const loading = useSelector(selectCategoryListLoading);
 
-    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChangedAction(ev.target.value));
-    const onClickFilterInactive = () => dispatch(filterInactiveChangedAction());
-    const onClickNew = () => dispatch(fetchCategoryAction(defaultCategory));
-    const onClickReload = () => dispatch(fetchListAction());
+    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setCategoriesSearch(ev.target.value));
+    const onClickFilterInactive = () => dispatch(categoriesToggleFilterInactive());
+    const onClickNew = () => dispatch(setNewCategory());
+    const onClickReload = () => dispatch(loadCategoryList());
 
     return (
         <div className="row g-3">

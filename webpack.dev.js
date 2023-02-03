@@ -24,7 +24,5 @@ module.exports = merge(common, {
         watchFiles: 'src/**/*',
     },
     devtool: 'eval-source-map',
-    plugins: [
-        new webpack.HotModuleReplacementPlugin(),
-    ]
+    plugins: []
 });

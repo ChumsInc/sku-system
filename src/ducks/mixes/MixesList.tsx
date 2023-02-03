@@ -8,7 +8,7 @@ import {
     SortableTable,
     tableAddedAction
 } from "chums-ducks";
-import {ProductColor, ProductMixTableField, ProductSorterProps} from "../../types";
+import {ProductColor, ProductMixTableField} from "../../types";
 import {fetchMixAction, selectMix, selectMixesCount, selectMixesList} from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
@@ -25,7 +25,7 @@ const rowClassName = (row: ProductColor) => classNames({'table-danger': !row.act
 
 const MixesList: React.FC = () => {
     const dispatch = useDispatch();
-    const sort = useSelector(selectTableSort(tableId)) as ProductSorterProps;
+    const sort = useSelector(selectTableSort(tableId));
     const list = useSelector(selectMixesList(sort));
     const listLength = useSelector(selectMixesCount);
     const pagedList = useSelector(selectPagedData(tableId, list));

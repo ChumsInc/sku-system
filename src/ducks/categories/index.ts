@@ -1,271 +1,198 @@
-import {ActionInterface, ActionPayload, buildPath, fetchJSON} from "chums-ducks";
-import {Category, CategoryField, CategorySorterProps} from "../../types";
-import {ThunkAction} from "redux-thunk";
-import {RootState} from "../index";
+import {RootState} from './../../app/configureStore'
+import {categorySorter} from "./utils";
+import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {defaultCategory, fetchCategory, fetchCategoryList, postCategory} from "../../api/categories";
+import {ProductCategory} from "chums-types";
+import {QueryStatus} from "@reduxjs/toolkit/query";
+import {SortProps} from "chums-components";
+import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
-import {combineReducers} from "redux";
-import {fetchSettingsSucceeded, settingsFetchRequested} from "../settings";
-import {categorySorter, defaultCategorySort} from "./utils";
 
-export interface CategoryPayload extends ActionPayload {
-    category?: Category,
-    categories?: Category[],
-    search?: string,
-    field?: CategoryField,
-    value?: unknown
+const defaultSort: SortProps<ProductCategory> = {
+    field: 'id',
+    ascending: true,
 }
 
-export interface CategoryAction extends ActionInterface {
-    payload?: CategoryPayload,
+export interface CategoriesState {
+    search: string;
+    filterInactive: boolean;
+    list: ProductCategory[];
+    loadingList: QueryStatus;
+    saving: QueryStatus;
+    selected: ProductCategory | null;
+    loadingCategory: QueryStatus;
+    sort: SortProps<ProductCategory>;
+    page: number;
+    rowsPerPage: number;
 }
 
-export interface CategoryThunkAction extends ThunkAction<any, RootState, unknown, CategoryAction> {
+const initialCategoriesState: CategoriesState = {
+    search: '',
+    filterInactive: true,
+    list: [],
+    loadingList: QueryStatus.uninitialized,
+    saving: QueryStatus.uninitialized,
+    selected: null,
+    loadingCategory: QueryStatus.uninitialized,
+    sort: {...defaultSort},
+    page: 0,
+    rowsPerPage: getPreference(localStorageKeys.categoriesRowsPerPage, 25),
 }
 
+export const setCategoriesSearch = createAction<string>('categories/searchChanged');
 
-export const defaultCategory: Category = {
-    id: 0,
-    code: '',
-    description: '',
-    notes: '',
-    tags: {},
-    active: true,
-    productLine: '',
-    Category2: ''
-}
+export const categoriesToggleFilterInactive = createAction<boolean | undefined>('categories/toggleFilterInactive');
 
-const categoriesSearchChanged = 'categories/searchChanged';
-const categoriesFilterInactiveChanged = 'categories/filterInactiveChanged';
+export const setNewCategory = createAction('categories/setNewCategory');
 
-const fetchListRequested = 'categories/fetchRequested';
-const fetchListSucceeded = 'categories/fetchSucceeded';
-const fetchListFailed = 'categories/fetchFailed';
+export const setPage = createAction<number>('categories/setPage');
 
-const categorySelected = 'categories/selected';
-const categoryChanged = 'categories/selected/groupChanged';
+export const setRowsPerPage = createAction<number>('categories/setRowsPerPage');
 
-const fetchCategoryRequested = 'categories/selected/fetchRequested';
-const fetchCategorySucceeded = 'categories/selected/fetchSucceeded';
-const fetchCategoryFailed = 'categories/selected/fetchFailed';
+export const setSort = createAction<SortProps<ProductCategory>>('categories/setSort');
 
 
-const saveCategoryRequested = 'categories/selected/saveRequested';
-const saveCategorySucceeded = 'categories/selected/saveSucceeded';
-const saveCategoryFailed = 'categories/selected/saveFailed';
-
-export const searchChangedAction = (search: string): CategoryAction => ({
-    type: categoriesSearchChanged,
-    payload: {search}
-});
-export const filterInactiveChangedAction = (): CategoryAction => ({type: categoriesFilterInactiveChanged});
-export const categoryChangedAction = (field: CategoryField, value: unknown): CategoryAction =>
-    ({type: categoryChanged, payload: {field, value}});
-
-export const fetchCategoryAction = (category: Category): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            if (!category.id) {
-                return dispatch({type: categorySelected, payload: {category}});
-            }
-            dispatch({type: fetchCategoryRequested});
-            const url = buildPath('/api/operations/sku/categories/:id', {id: category.id});
-            const {list = []} = await fetchJSON(url, {cache: 'no-cache'});
-            dispatch({type: fetchCategorySucceeded, payload: {category: list[0] || defaultCategory}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchCategoriesAction()", error.message);
-                return dispatch({type: fetchListFailed, payload: {error, context: fetchCategoryRequested}})
-            }
-            console.error("fetchCategoriesAction()", error);
+export const loadCategoryList = createAsyncThunk<ProductCategory[]>(
+    'categories/loadCategoriesList',
+    async () => {
+        return await fetchCategoryList();
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectCategoryListLoading(state) && !selectCategorySaving(state);
         }
-    };
+    }
+)
 
-export const fetchListAction = (): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            dispatch({type: fetchListRequested});
-            const {list = []} = await fetchJSON('/api/operations/sku/categories', {cache: 'no-cache'});
-            dispatch({type: fetchListSucceeded, payload: {categories: list}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchListAction()", error.message);
-                return dispatch({type: fetchListFailed, payload: {error, context: fetchListRequested}})
-            }
-            console.error("fetchListAction()", error);
+export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
+    'categories/loadCategory',
+    async (arg) => {
+        return await fetchCategory(arg.id);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectCategoryListLoading(state);
         }
-    };
+    }
+)
 
-export const saveCategoryAction = (category: Category): CategoryThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (!selectIsAdmin(state) || selectLoading(state) || selectSaving(state)) {
-                return;
-            }
-            dispatch({type: saveCategoryRequested});
-            const response = await fetchJSON('/api/operations/sku/categories', {
-                method: 'POST',
-                body: JSON.stringify(category)
-            });
-            dispatch({type: saveCategorySucceeded, payload: {category: response.category}})
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("saveGroupAction()", error.message);
-                return dispatch({type: saveCategoryFailed, payload: {error, context: saveCategoryRequested}})
-            }
-            console.error("saveGroupAction()", error);
+export const saveCategory = createAsyncThunk<ProductCategory, ProductCategory>(
+    'categories/saveCategory',
+    async (arg) => {
+        return await postCategory(arg);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return selectIsAdmin(state) && !selectCategorySaving(state);
         }
-    };
+    }
+)
+
+const categoriesReducer = createReducer(initialCategoriesState, (builder) => {
+    builder
+        .addCase(setCategoriesSearch, (state, action) => {
+            state.search = action.payload;
+        })
+        .addCase(categoriesToggleFilterInactive, (state, action) => {
+            state.filterInactive = action.payload ?? !state.filterInactive;
+        })
+        .addCase(setNewCategory, (state, action) => {
+            state.selected = {...defaultCategory};
+        })
+        .addCase(loadCategoryList.pending, (state) => {
+            state.loadingList = QueryStatus.pending;
+        })
+        .addCase(loadCategoryList.fulfilled, (state, action) => {
+            state.loadingList = QueryStatus.fulfilled;
+            state.list = action.payload.sort(categorySorter(defaultSort));
+        })
+        .addCase(loadCategoryList.fulfilled, (state) => {
+            state.loadingList = QueryStatus.rejected;
+        })
+        .addCase(loadCategory.pending, (state, action) => {
+            state.loadingCategory = QueryStatus.pending;
+        })
+        .addCase(loadCategory.fulfilled, (state, action) => {
+            state.loadingCategory = QueryStatus.fulfilled;
+            if (action.payload && action.payload.id) {
+                state.list = [
+                    ...state.list.filter(cat => cat.id !== action.payload?.id),
+                    action.payload,
+                ].sort(categorySorter(defaultSort));
+            }
+        })
+        .addCase(loadCategory.rejected, (state, action) => {
+            state.loadingCategory = QueryStatus.rejected;
+        })
+        .addCase(saveCategory.pending, (state, action) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(saveCategory.fulfilled, (state, action) => {
+            state.saving = QueryStatus.fulfilled
+            state.selected = action.payload;
+            if (action.payload) {
+                state.list = [
+                    ...state.list.filter(cat => cat.id !== action.payload?.id),
+                    action.payload,
+                ].sort(categorySorter(defaultSort));
+            }
+        })
+        .addCase(saveCategory.rejected, (state, action) => {
+            state.saving = QueryStatus.rejected;
+        })
+        .addCase(setPage, (state, action) => {
+            state.page = action.payload;
+        })
+        .addCase(setRowsPerPage, (state, action) => {
+            setPreference(localStorageKeys.categoriesRowsPerPage, action.payload);
+            state.rowsPerPage = action.payload;
+            state.page = 0;
+        })
+        .addCase(setSort, (state, action) => {
+            state.sort = action.payload;
+        })
+})
 
 
 export const selectSearch = (state: RootState) => state.categories.search;
+
 export const selectFilterInactive = (state: RootState) => state.categories.filterInactive;
-export const selectList = (state: RootState): Category[] => state.categories.list.sort(categorySorter(defaultCategorySort));
-export const selectSortedList = (sort: CategorySorterProps) => (state: RootState): Category[] => {
-    const search = selectSearch(state);
-    const filterInactive = selectFilterInactive(state);
 
-    let re = /^/i;
-    try {
-        re = new RegExp(search, 'i');
-    } catch (err) {
+export const selectList = (state: RootState) => state.categories.list;
+
+export const selectSort = (state: RootState) => state.categories.sort;
+
+export const selectCategoryList = createSelector(
+    [selectList, selectSort, selectFilterInactive, selectSearch],
+    (list, sort, inactive, search) => {
+        let re = /^/i;
+        try {
+            re = new RegExp(search, 'i');
+        } catch (err) {
+        }
+
+        return list
+            .filter(cat => !inactive || cat.active)
+            .filter(cat => re.test(cat.code) || re.test(cat.description ?? '') || re.test(cat.notes ?? ''))
+            .sort(categorySorter(sort));
     }
+)
 
-    return state.categories.list
-        .filter(category => !filterInactive || category.active)
-        .filter(category => re.test(category.code) || re.test(category.description) || re.test(category.notes || ''))
-        .sort(categorySorter(sort));
-}
 export const selectCategoriesCount = (state: RootState) => state.categories.list.length;
+
 export const selectActiveCategoriesCount = (state: RootState) => state.categories.list.filter(g => g.active).length;
-export const selectCategory = (state: RootState): Category => state.categories.selected || {...defaultCategory};
-export const selectLoading = (state: RootState) => state.categories.loading;
-export const selectSaving = (state: RootState) => state.categories.saving;
 
-const searchReducer = (state: string = '', action: CategoryAction): string => {
-    const {type, payload} = action;
-    switch (type) {
-    case categoriesSearchChanged:
-        return payload?.search || '';
-    default:
-        return state;
-    }
-}
+export const selectCurrentCategory = (state: RootState): ProductCategory | null => state.categories.selected;
 
-const filterInactiveReducer = (state: boolean = true, action: CategoryAction): boolean => {
-    switch (action.type) {
-    case categoriesFilterInactiveChanged:
-        return !state;
-    default:
-        return state;
-    }
-}
+export const selectCategoryListLoading = (state: RootState) => state.categories.loadingList === QueryStatus.pending;
 
-const listReducer = (state: Category[] = [], action: CategoryAction): Category[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-    case fetchListSucceeded:
-        if (payload?.categories) {
-            return payload.categories.sort(categorySorter(defaultCategorySort));
-        }
-        return [];
-    case fetchCategorySucceeded:
-    case saveCategorySucceeded:
-        if (payload?.category) {
-            return [
-                ...state.filter(group => group.id !== payload.category?.id),
-                {...payload.category}
-            ].sort(categorySorter(defaultCategorySort));
-        }
-        return state;
-    default:
-        return state;
-    }
-}
+export const selectCategoryLoading = (state: RootState) => state.categories.loadingCategory === QueryStatus.pending;
 
-const selectedReducer = (state: Category = defaultCategory, action: CategoryAction): Category => {
-    const {type, payload} = action;
-    switch (type) {
-    case fetchCategorySucceeded:
-    case saveCategorySucceeded:
-    case categorySelected:
-        if (payload?.category) {
-            return {...payload.category};
-        }
-        return {...defaultCategory};
-    case fetchListSucceeded:
-        if (state && payload?.categories) {
-            const [category] = payload.categories.filter(g => g.id === state.id);
-            return {...category};
-        }
-        return state;
+export const selectCategorySaving = (state: RootState) => state.categories.saving === QueryStatus.pending;
 
-    case categoryChanged:
-        if (state && payload?.field) {
-            return {...state, [payload.field]: payload.value, changed: true}
-        }
-        return state;
-    default:
-        return state;
-    }
-}
+export const selectCategoriesPage = (state:RootState) => state.categories.page;
 
-const loadingReducer = (state: boolean = false, action: CategoryAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchListRequested:
-        return true;
-    case fetchListSucceeded:
-    case fetchListFailed:
-        return false;
-    default:
-        return state;
-    }
-};
+export const selectCategoriesRowsPerPage = (state:RootState) => state.categories.rowsPerPage;
 
-const selectedLoadingReducer = (state: boolean = false, action: CategoryAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchCategoryRequested:
-        return true;
-    case fetchCategorySucceeded:
-    case fetchCategoryFailed:
-        return false;
-    default:
-        return state;
-    }
-};
 
-const savingReducer = (state: boolean = false, action: CategoryAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case saveCategoryRequested:
-        return true;
-    case saveCategorySucceeded:
-    case saveCategoryFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-export default combineReducers({
-    search: searchReducer,
-    filterInactive: filterInactiveReducer,
-    list: listReducer,
-    loading: loadingReducer,
-    saving: savingReducer,
-    selected: selectedReducer,
-    selectedLoading: selectedLoadingReducer,
-})
+export default categoriesReducer;

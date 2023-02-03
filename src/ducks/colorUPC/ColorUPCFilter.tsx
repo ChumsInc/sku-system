@@ -1,32 +1,33 @@
 import React, {ChangeEvent} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {
-    defaultColorUPC,
-    fetchColorUPCAction,
-    fetchListAction,
-    filterInactiveChangedAction,
-    searchChangedAction,
+    loadColorUPC,
+    loadColorUPCList,
+    searchChanged,
     selectActiveColorUPCCount,
     selectColorUPCCount,
     selectFilterInactive,
     selectLoading,
-    selectSearch
+    selectSearch,
+    toggleFilterInactive
 } from "./index";
-import {SpinnerButton} from "chums-ducks";
+import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
+import {useAppDispatch} from "../../app/configureStore";
+import {defaultColorUPC} from "../../api/colorUPC";
 
 const ColorUPCFilter: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);
     const categoriesCount = useSelector(selectColorUPCCount);
     const activeCategoriesCount = useSelector(selectActiveColorUPCCount);
     const loading = useSelector(selectLoading);
 
-    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChangedAction(ev.target.value));
-    const onClickFilterInactive = () => dispatch(filterInactiveChangedAction());
-    const onClickNew = () => dispatch(fetchColorUPCAction(defaultColorUPC));
-    const onClickReload = () => dispatch(fetchListAction());
+    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChanged(ev.target.value));
+    const onClickFilterInactive = () => dispatch(toggleFilterInactive());
+    const onClickNew = () => dispatch(loadColorUPC(defaultColorUPC));
+    const onClickReload = () => dispatch(loadColorUPCList());
 
     return (
         <div className="row g-3">

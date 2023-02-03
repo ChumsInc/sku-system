@@ -1,13 +1,15 @@
-import {ProductMix, ProductMixSorterProps} from "../../types";
+import {SortProps} from "chums-components";
+import {ProductMixInfo} from "chums-types";
 
-export const defaultMixSort: ProductMixSorterProps = {
+export const defaultMixSort: SortProps<ProductMixInfo> = {
     field: "code",
     ascending: true,
 }
 
-export const productMixKey = (mix: ProductMix) => mix.id;
-export const productMixSorter = ({field, ascending}: ProductMixSorterProps) =>
-    (a: ProductMix, b: ProductMix) => {
+export const productMixKey = (mix: ProductMixInfo) => mix.id;
+
+export const productMixSorter = ({field, ascending}: SortProps<ProductMixInfo>) =>
+    (a: ProductMixInfo, b: ProductMixInfo) => {
         if (field === 'tags') {
             return 0;
         }

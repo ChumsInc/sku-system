@@ -1,64 +1,75 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent} from 'react';
-import {useDispatch, useSelector} from "react-redux";
+import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {groupChangedAction, saveGroupAction, selectSelectedSKUGroup} from "./index";
-import {ProductMixField, SKUGroupField} from "../../types";
-import {Alert, FormColumn} from "chums-ducks";
+import {defaultSKUGroup, saveSKUGroup, selectCurrentSKUGroup} from "./index";
+import {SKUGroupField} from "../../types";
+import {Alert, FormColumn} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
 import TextArea from 'react-textarea-autosize';
+import {Editable, SKUGroup} from "chums-types";
+import {useAppDispatch} from "../../app/configureStore";
 
 
 const GroupEditor: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
-    const selected = useSelector(selectSelectedSKUGroup);
+    const selected = useSelector(selectCurrentSKUGroup);
+    const [group, setGroup] = useState<SKUGroup & Editable>(selected ?? {...defaultSKUGroup});
 
-    const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => dispatch(groupChangedAction('code', ev.target.value.toUpperCase()));
+    useEffect(() => {
+        setGroup({...(selected ?? defaultSKUGroup)})
+    }, [selected])
 
-    const onChange = (field: SKUGroupField) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        dispatch(groupChangedAction(field, ev.target.value));
+    const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => {
+        setGroup({...group, code: ev.target.value.toUpperCase(), changed: true});
     }
 
-    const onChangeActive = () => dispatch(groupChangedAction('active', !selected.active));
+    const onChange = (field: SKUGroupField) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        setGroup({...group, [field]: ev.target.value, changed: true})
+    }
+
+    const onChangeActive = (active: boolean) => {
+        setGroup({...group, active, changed: true});
+    }
 
     const onSubmit = (ev: FormEvent) => {
         ev.preventDefault();
-        dispatch(saveGroupAction(selected));
+        dispatch(saveSKUGroup(group));
     }
 
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Mix Editor</h3>
             <FormColumn label="Code">
-                <input type="text" readOnly={!isAdmin} value={selected.code}
+                <input type="text" readOnly={!isAdmin} value={group.code}
                        className="form-control form-control-sm"
                        onChange={onChangeCode}/>
                 <small className="text-muted">2 Characters</small>
             </FormColumn>
             <FormColumn label="Description">
-                <input type="text" readOnly={!isAdmin} value={selected.description}
+                <input type="text" readOnly={!isAdmin} value={group.description}
                        className="form-control form-control-sm"
                        onChange={onChange('description')}/>
             </FormColumn>
             <FormColumn label="Product Line">
-                <ProductLineSelect value={selected.productLine} onChange={onChange('productLine')} disabled={!isAdmin} />
+                <ProductLineSelect value={group.productLine} onChange={onChange('productLine')} disabled={!isAdmin}/>
             </FormColumn>
 
             <FormColumn label="Notes">
-                <TextArea readOnly={!isAdmin} value={selected.notes || ''} onChange={onChange('notes')}
+                <TextArea readOnly={!isAdmin} value={group.notes || ''} onChange={onChange('notes')}
                           className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">
-                <ActiveButtonGroup active={selected.active} onChange={onChangeActive} disabled={!isAdmin}/>
+                <ActiveButtonGroup active={group.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
                 <button type="submit" className="btn btn-sm btn-primary">Save</button>
             </FormColumn>
-            {selected.changed && (
+            {group.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>
             )}
         </form>

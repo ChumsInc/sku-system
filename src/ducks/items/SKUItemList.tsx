@@ -4,72 +4,91 @@
 
 import React, {ChangeEvent, useEffect} from 'react';
 import GTIN from '../../GTIN';
-import {useDispatch, useSelector} from 'react-redux';
+import {useSelector} from 'react-redux';
 import TrimmedText from "../../components/TrimmedText";
-import {Product, ProductSorterProps, ProductTableField} from "../../types";
+import {Product} from "../../types";
 import ColorUPCButton from "./ColorUPCButton";
 import {
-    filterInactiveChangedAction, loadSKUItemsAction,
-    searchChangedAction, selectActiveItemsCount,
+    loadSKUItems,
+    selectActiveItemsCount,
+    selectFilteredItemList,
     selectFilterInactive,
-    selectItemList, selectItemsCount,
+    selectItemsCount,
     selectLoading,
-    selectSearch
+    selectPage,
+    selectRowsPerPage,
+    selectSearch,
+    selectSort,
+    setPage,
+    setRowsPerPage,
+    setSearch,
+    setSort,
+    toggleFilterInactive
 } from "./index";
-import {
-    addPageSetAction, Alert,
-    FormCheck,
-    pagedDataSelector, PagerDuck,
-    selectTableSort,
-    setPageAction,
-    SortableTable,
-    SpinnerButton,
-    tableAddedAction
-} from "chums-ducks";
-import {selectSelectedSKU} from "../sku/selectors";
+import {Alert, SortableTable, SortableTableField, SortProps, SpinnerButton, TablePagination} from "chums-components";
+import {selectCurrentSKU} from "../sku/selectors";
 import classNames from "classnames";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
+import {useAppDispatch} from "../../app/configureStore";
+import {formatGTIN} from "@chumsinc/gtin-tools";
 
-const tableFields: ProductTableField[] = [
+const tableFields: SortableTableField<Product>[] = [
     {field: 'company', title: 'Co', sortable: true},
     {field: 'ItemCode', title: 'Item', sortable: true},
-    {field: 'ItemCodeDesc', title: 'Desc', sortable: true, render: (row:Product) => (<TrimmedText text={row.ItemCodeDesc} />)},
+    {
+        field: 'ItemCodeDesc',
+        title: 'Desc',
+        sortable: true,
+        render: (row: Product) => (<TrimmedText text={row.ItemCodeDesc}/>)
+    },
     {field: 'ProductType', title: 'PT', sortable: true},
     {field: 'ItemStatus', title: 'Status', sortable: true},
-    {field: 'UDF_UPC', title: 'UPC', className: 'upc', sortable: true, render: (row:Product) => GTIN.format(row.UDF_UPC || ''),},
-    {field: 'UDF_UPC_BY_COLOR', title: 'Color UPC', sortable: true, render: (row:Product) => (<ColorUPCButton item={row}/>)}
+    {
+        field: 'UDF_UPC',
+        title: 'UPC',
+        className: 'upc',
+        sortable: true,
+        render: (row: Product) => formatGTIN(row.UDF_UPC || ''),
+    },
+    {
+        field: 'UDF_UPC_BY_COLOR',
+        title: 'Color UPC',
+        sortable: true,
+        render: (row: Product) => (<ColorUPCButton item={row}/>)
+    }
 
 ];
 
 const tableId = 'sku-item-list';
-const SKUItemList: React.FC = () => {
-    const dispatch = useDispatch();
+
+function SKUItemList() {
+    const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);
     const loading = useSelector(selectLoading)
-    const sort = useSelector(selectTableSort(tableId)) as ProductSorterProps;
-    const sku = useSelector(selectSelectedSKU);
-    const list = useSelector(selectItemList(sort));
+    const sort = useSelector(selectSort);
+    const sku = useSelector(selectCurrentSKU);
+    const list = useSelector(selectFilteredItemList);
+    const page = useSelector(selectPage)
+    const rowsPerPage = useSelector(selectRowsPerPage);
     const listLength = useSelector(selectItemsCount);
     const itemActiveCount = useSelector(selectActiveItemsCount);
-    const pagedList = useSelector(pagedDataSelector(tableId, list));
 
     useEffect(() => {
-        dispatch(tableAddedAction({key: tableId, field: 'ItemCode', ascending: true}));
-        dispatch(addPageSetAction({key: tableId}));
-    }, []);
+        dispatch(loadSKUItems(sku));
+    }, [sku])
 
-    useEffect(() => {
-        dispatch(setPageAction({current: 1, key: tableId}));
-    }, [sku.id]);
+    const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
+    const onToggleFilterInactive = (ev: ChangeEvent<HTMLInputElement>) => dispatch(toggleFilterInactive(ev.target.checked));
+    const onClickReload = () => dispatch(loadSKUItems(sku));
 
-    const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChangedAction(ev.target.value));
-    const onToggleFilterInactive = () => dispatch(filterInactiveChangedAction());
-    const onClickReload = () => dispatch(loadSKUItemsAction(sku));
-
-    const rowClassName = (row:Product) => classNames({
+    const rowClassName = (row: Product) => classNames({
         'text-danger': row.InactiveItem === 'Y' || row.ProductType === 'D',
     })
+
+    const sortChangeHandler = (sort: SortProps<Product>) => dispatch(setSort(sort));
+    const pageChangeHandler = (page: number) => dispatch(setPage(page));
+    const rowsPerPageChangeHandler = (rpp: number) => dispatch(setRowsPerPage(rpp));
 
     return (
         <div>
@@ -81,17 +100,23 @@ const SKUItemList: React.FC = () => {
                 </div>
                 <div className="col-auto">
                     <ShowInactiveCheckbox checked={!filterInactive} onChange={onToggleFilterInactive}
-                                          countAll={listLength} countActive={itemActiveCount} />
+                                          countAll={listLength} countActive={itemActiveCount}/>
                 </div>
                 <div className="col-auto">
-                    <SpinnerButton spinning={loading} size="sm" color="primary" onClick={onClickReload}>Reload</SpinnerButton>
+                    <SpinnerButton spinning={loading} size="sm" color="primary"
+                                   onClick={onClickReload}>Reload</SpinnerButton>
                 </div>
             </div>
-            <SortableTable tableKey={tableId} data={pagedList} fields={tableFields} keyField="ItemCode" size="xs"
+            <SortableTable data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                           fields={tableFields} keyField="ItemCode" size="xs"
+                           currentSort={sort} onChangeSort={sortChangeHandler}
+
                            rowClassName={rowClassName}/>
-            {!sku.id && <Alert color="info">Select SKU</Alert>}
-            {!!sku.id && !loading && !listLength && <Alert color="warning">No Items</Alert>}
-            <PagerDuck dataLength={list.length} pageKey={tableId} filtered={list.length !== listLength}/>
+            {!sku?.id && <Alert color="info">Select SKU</Alert>}
+            {!!sku?.id && !loading && !listLength && <Alert color="warning">No Items</Alert>}
+            <TablePagination page={page} onChangePage={pageChangeHandler}
+                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
+                             count={list.length}/>
         </div>
     )
 }

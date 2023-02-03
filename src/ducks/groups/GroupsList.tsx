@@ -1,57 +1,67 @@
 import React, {useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
+import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
+
 import {
-    addPageSetAction,
-    PagerDuck,
-    selectPagedData,
-    selectTableSort,
-    SortableTable,
-    tableAddedAction
-} from "chums-ducks";
-import {
-    ProductColor,
-    ProductMixTableField,
-    ProductSorterProps,
-    SKUGroup,
-    SKUGroupSorterProps,
-    SKUGroupTableField
-} from "../../types";
-import {fetchGroupAction, selectSelectedSKUGroup, selectGroupsCount, selectList, selectSortedList} from "./index";
+    loadSKUGroup,
+    loadSKUGroupList,
+    selectCurrentSKUGroup,
+    selectFilteredList,
+    selectListLoaded,
+    selectPage,
+    selectRowsPerPage,
+    selectSort,
+    setPage,
+    setRowsPerPage,
+    setSort
+} from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
+import {useAppDispatch} from "../../app/configureStore";
+import {SKUGroup} from "chums-types";
 
 const tableId = 'groups-list';
 
-const fields: SKUGroupTableField[] = [
+const fields: SortableTableField<SKUGroup>[] = [
     {field: 'code', title: 'Code', sortable: true},
     {field: 'description', title: 'Description', sortable: true},
     {field: 'productLine', title: 'Product Line', sortable: true},
-    {field: 'notes', title: 'Notes', sortable: true, render: ({notes}) => (<TrimmedText text={notes} length={65}/>)}
+    {field: 'notes', title: 'Notes', sortable: true, render: ({notes}) => (<TrimmedText text={notes ?? ''} length={65}/>)}
 ]
 
 const rowClassName = (row: SKUGroup) => classNames({'table-danger': !row.active});
 
 const GroupsList: React.FC = () => {
-    const dispatch = useDispatch();
-    const sort = useSelector(selectTableSort(tableId)) as SKUGroupSorterProps;
-    const list = useSelector(selectSortedList(sort));
-    const listLength = useSelector(selectGroupsCount);
-    const pagedList = useSelector(selectPagedData(tableId, list));
-    const selected = useSelector(selectSelectedSKUGroup);
-
-    const onSelectRow = (row: SKUGroup) => dispatch(fetchGroupAction(row));
+    const dispatch = useAppDispatch();
+    const sort = useSelector(selectSort);
+    const list = useSelector(selectFilteredList);
+    const selected = useSelector(selectCurrentSKUGroup);
+    const loaded = useSelector(selectListLoaded);
+    const page = useSelector(selectPage);
+    const rowsPerPage = useSelector(selectRowsPerPage);
 
     useEffect(() => {
-        dispatch(tableAddedAction({key: tableId, field: 'ItemCode', ascending: true}));
-        dispatch(addPageSetAction({key: tableId}));
-    }, []);
+        if (!loaded) {
+            dispatch(loadSKUGroupList());
+        }
+    }, [])
+
+    const onSelectRow = (row: SKUGroup) => dispatch(loadSKUGroup(row));
+    const onChangePage = (page: number) => dispatch(setPage(page));
+    const onChangeRowsPerPage = (rpp: number) => dispatch(setRowsPerPage(rpp));
+    const sortChangeHandler = (sort: SortProps<SKUGroup>) => dispatch(setSort(sort));
 
     return (
         <>
-            <SortableTable tableKey={tableId} keyField="id" fields={fields} data={pagedList} size="xs"
+            <SortableTable keyField="id" fields={fields}
+                           data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                           size="xs"
+                           currentSort={sort}
+                           onChangeSort={sortChangeHandler}
                            rowClassName={rowClassName}
                            selected={selected?.id} onSelectRow={onSelectRow}/>
-            <PagerDuck dataLength={list.length} filtered={list.length !== listLength} pageKey={tableId}/>
+            <TablePagination page={page} onChangePage={onChangePage} rowsPerPage={rowsPerPage}
+                             onChangeRowsPerPage={onChangeRowsPerPage} count={list.length}/>
         </>
     )
 }

@@ -1,168 +1,63 @@
-import {combineReducers} from "redux";
-import {ActionInterface, ActionPayload, fetchJSON} from "chums-ducks";
-import {ThunkAction} from "redux-thunk";
-import {RootState} from "../index";
-import {
-    CountryOfOrigin,
-    PrimaryVendor,
-    Category,
-    ProductColor,
-    ProductLine,
-    ProductMix,
-    ProductSeason,
-    ProductSKU,
-    ProductSubCategory,
-    ProductWarehouse,
-    SKUGroup
-} from "../../types";
 
-export interface SettingsPayload extends ActionPayload {
-    categories?: Category[],
-    colors?: ProductColor[],
-    countryOfOrigin?: CountryOfOrigin[],
-    productLines?: ProductLine[],
-    mixes?: ProductMix[],
-    primaryVendor?: PrimaryVendor[],
-    seasons?: ProductSeason[],
-    skuGroups?: SKUGroup[],
-    skuList?: ProductSKU[],
-    subCategories?: ProductSubCategory[],
-    warehouses?: ProductWarehouse[],
+import {QueryStatus} from "@reduxjs/toolkit/query";
+import {ProductLine} from "chums-types";
+import {createAsyncThunk, createReducer} from "@reduxjs/toolkit";
+import {SettingsResponse} from "../../types";
+import {fetchSettings} from "../../api/settings";
+import {loadSKUList} from "../sku/actions";
+import {loadCategoryList} from "../categories";
+import {loadColorsList} from "../colors";
+import {loadColorUPCList} from "../colorUPC";
+import {loadSKUGroupList} from "../groups";
+import {RootState} from "../../app/configureStore";
+
+export interface SettingsState {
+    loading: QueryStatus;
+    productLines: ProductLine[];
 }
 
-export interface SettingsAction extends ActionInterface {
-    payload?: SettingsPayload,
+const initialSettingsState:SettingsState = {
+    loading: QueryStatus.uninitialized,
+    productLines: [],
 }
 
-export interface SettingsThunkAction extends ThunkAction<any, RootState, unknown, SettingsAction> {
-}
-
-export const settingsFetchRequested = 'settings/fetchRequested';
-export const fetchSettingsSucceeded = 'settings/fetchSucceeded';
-export const fetchSettingsFailed = 'settings/fetchFailed';
-
-export const fetchSettingsAction = (company: string = 'chums'): SettingsThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            dispatch({type: settingsFetchRequested});
-            const url = '/api/operations/production/pm/settings/:company'
-                .replace(':company', encodeURIComponent(company));
-            const {settings} = await fetchJSON(url, {cache: "no-cache"});
-            const {
-                categories = [],
-                colors = [],
-                countryOfOrigin = [],
-                lines: productLines = [],
-                mixes = [],
-                primaryVendor = [],
-                seasons = [],
-                skuGroups = [],
-                skuList = [],
-                status: productStatus = [],
-                subCategories = [],
-                warehouses = [],
-            } = settings
-            dispatch({
-                type: fetchSettingsSucceeded, payload: {
-                    categories,
-                    colors, productLines, mixes, skuList, skuGroups, subCategories
-                }
-            });
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchSettingsAction()", error.message);
-                return dispatch({type: fetchSettingsFailed, payload: {error, context: settingsFetchRequested}})
-            }
-            console.error("fetchSettingsAction()", error);
+export const loadSettings = createAsyncThunk<SettingsResponse>('' +
+    'settings/load',
+    async (arg, {dispatch}) => {
+        dispatch(loadSKUList());
+        dispatch(loadCategoryList());
+        dispatch(loadColorsList());
+        dispatch(loadColorUPCList());
+        dispatch(loadSKUGroupList());
+        return await fetchSettings();
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectLoading(state);
         }
-    };
+    })
 
-export const selectLoading = (state: RootState) => state.settings.loading;
-export const selectProductLineList = (state: RootState) => state.settings.productLines;
-export const selectSKUList = (state: RootState) => state.settings.skuList;
-export const selectSubCategoryList = (state: RootState) => state.settings.subCategories;
-
-
-const loadingReducer = (state: boolean = false, action: SettingsAction): boolean => {
-    switch (action.type) {
-    case settingsFetchRequested:
-        return true;
-    case fetchSettingsSucceeded:
-    case fetchSettingsFailed:
-        return false;
-    default:
-        return state;
-    }
-}
-
-const productLinesReducer = (state: ProductLine[] = [], action: SettingsAction): ProductLine[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.productLines) {
-            return [...payload.productLines];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const primaryVendorReducer = (state: PrimaryVendor[] = [], action: SettingsAction): PrimaryVendor[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.primaryVendor) {
-            return [...payload.primaryVendor];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const subCategoriesReducer = (state: ProductSubCategory[] = [], action: SettingsAction): ProductSubCategory[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.subCategories) {
-            return [...payload.subCategories];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-const skuListReducer = (state: ProductSKU[] = [], action: SettingsAction): ProductSKU[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case settingsFetchRequested:
-        return [];
-    case fetchSettingsSucceeded:
-        if (payload?.skuList) {
-            return [...payload.skuList];
-        }
-        return state;
-    default:
-        return state;
-    }
-};
-
-
-export default combineReducers({
-    loading: loadingReducer,
-    productLines: productLinesReducer,
-    subCategories: subCategoriesReducer,
-    skuList: skuListReducer,
+const settingsReducer = createReducer(initialSettingsState, (builder) => {
+    builder
+        .addCase(loadSettings.pending, (state, action) => {
+        state.loading = QueryStatus.pending;
+    })
+        .addCase(loadSettings.fulfilled, (state, action) => {
+            state.productLines = action.payload.lines;
+            state.loading = QueryStatus.fulfilled;
+        })
+        .addCase(loadSettings.rejected, (state, action) => {
+            state.loading = QueryStatus.rejected;
+        })
 });
+
+export default settingsReducer;
+
+
+export const selectLoading = (state: RootState) => state.settings.loading === QueryStatus.pending;
+export const selectProductLineList = (state: RootState) => state.settings.productLines;
+// export const selectSKUList = (state: RootState) => state.settings.skuList;
+// export const selectSubCategoryList = (state: RootState) => state.settings.subCategories;
+
+

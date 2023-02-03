@@ -1,51 +1,69 @@
-import React, {useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import React from "react";
+import {useSelector} from "react-redux";
 import {
-    addPageSetAction,
-    PagerDuck,
-    selectPagedData,
-    selectTableSort,
-    SortableTable,
-    tableAddedAction
-} from "chums-ducks";
-import {Category, CategoryTableField, SKUGroup, SKUGroupSorterProps, SKUGroupTableField} from "../../types";
-import {fetchCategoryAction, selectCategoriesCount, selectCategory, selectSortedList} from "./index";
+    loadCategory,
+    selectCategoriesPage,
+    selectCategoriesRowsPerPage,
+    selectCategoryList,
+    selectCurrentCategory,
+    selectSort,
+    setPage,
+    setRowsPerPage,
+    setSort
+} from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
 import {categoryKey} from "./utils";
+import {useAppDispatch} from "../../app/configureStore";
+import {ProductCategory} from "chums-types";
+import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
 
 const tableId = 'groups-list';
 
-const fields: CategoryTableField[] = [
+const fields: SortableTableField<ProductCategory>[] = [
     {field: 'code', title: 'Code', sortable: true},
     {field: 'description', title: 'Description', sortable: true},
     {field: 'productLine', title: 'Product Line', sortable: true},
-    {field: 'notes', title: 'Notes', sortable: true, render: ({notes}) => (<TrimmedText text={notes} length={65}/>)}
+    {
+        field: 'notes',
+        title: 'Notes',
+        sortable: true,
+        render: ({notes}) => (<TrimmedText text={notes ?? ''} length={65}/>)
+    }
 ]
 
-const rowClassName = (row: Category) => classNames({'table-danger': !row.active});
+const rowClassName = (row: ProductCategory) => classNames({'table-danger': !row.active});
 
 const CategoriesList: React.FC = () => {
-    const dispatch = useDispatch();
-    const sort = useSelector(selectTableSort(tableId)) as SKUGroupSorterProps;
-    const list = useSelector(selectSortedList(sort));
-    const listLength = useSelector(selectCategoriesCount);
-    const pagedList = useSelector(selectPagedData(tableId, list));
-    const selected = useSelector(selectCategory);
+    const dispatch = useAppDispatch();
+    const sort = useSelector(selectSort);
+    const list = useSelector(selectCategoryList);
+    const page = useSelector(selectCategoriesPage);
+    const rowsPerPage = useSelector(selectCategoriesRowsPerPage);
+    const selected = useSelector(selectCurrentCategory);
 
-    const onSelectRow = (row: Category) => dispatch(fetchCategoryAction(row));
+    const onSelectRow = (row: ProductCategory) => dispatch(loadCategory(row));
 
-    useEffect(() => {
-        dispatch(tableAddedAction({key: tableId, field: 'code', ascending: true}));
-        dispatch(addPageSetAction({key: tableId}));
-    }, []);
+    const onChangePage = (page: number) => dispatch(setPage(page));
+
+    const onChangeRowsPerPage = (rowsPerPage: number) => dispatch(setRowsPerPage(rowsPerPage));
+
+    const sortChangedHandler = (sort: SortProps<ProductCategory>) => {
+        dispatch(setSort(sort));
+    }
 
     return (
         <>
-            <SortableTable tableKey={tableId} keyField={categoryKey} fields={fields} data={pagedList} size="xs"
+            <SortableTable keyField={categoryKey} fields={fields}
+                           data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                           size="xs"
+                           currentSort={sort}
+                           onChangeSort={sortChangedHandler}
                            rowClassName={rowClassName}
                            selected={categoryKey(selected)} onSelectRow={onSelectRow}/>
-            <PagerDuck dataLength={list.length} filtered={list.length !== listLength} pageKey={tableId}/>
+            <TablePagination page={page} onChangePage={onChangePage}
+                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={onChangeRowsPerPage}
+                             count={list.length}/>
         </>
     )
 }

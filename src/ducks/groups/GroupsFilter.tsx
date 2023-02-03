@@ -2,13 +2,13 @@ import React, {ChangeEvent} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {
     defaultSKUGroup,
-    fetchListAction,
-    fetchGroupAction,
-    filterInactiveChangedAction,
-    searchChangedAction,
+    loadSKUGroupList,
+    loadSKUGroup,
+    toggleFilterInactive,
+    setSearch,
     selectActiveGroupsCount,
     selectFilterInactive,
-    selectLoading,
+    selectListLoading,
     selectGroupsCount,
     selectSearch
 } from "./index";
@@ -21,12 +21,12 @@ const GroupsFilter: React.FC = () => {
     const filterInactive = useSelector(selectFilterInactive);
     const mixesCount = useSelector(selectGroupsCount);
     const activeMixesCount = useSelector(selectActiveGroupsCount);
-    const loading = useSelector(selectLoading);
+    const loading = useSelector(selectListLoading);
 
-    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChangedAction(ev.target.value));
-    const onClickFilterInactive = () => dispatch(filterInactiveChangedAction());
-    const onClickNewColor = () => dispatch(fetchGroupAction(defaultSKUGroup));
-    const onClickReload = () => dispatch(fetchListAction());
+    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
+    const onClickFilterInactive = () => dispatch(toggleFilterInactive());
+    const onClickNewColor = () => dispatch(loadSKUGroup(defaultSKUGroup));
+    const onClickReload = () => dispatch(loadSKUGroupList());
 
     return (
         <div className="row g-3">

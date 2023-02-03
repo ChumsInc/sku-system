@@ -1,28 +1,21 @@
-/**
- * Created by steve on 2/9/2017.
- */
 import React from 'react';
-import {render} from 'react-dom';
-import {applyMiddleware, compose, createStore} from 'redux';
-import { Provider } from 'react-redux';
-import thunk from 'redux-thunk';
-import reducer from './ducks';
-import Root from "./components/Root";
+import {createRoot} from 'react-dom/client';
+import {Provider} from 'react-redux';
+import {HashRouter as Router} from 'react-router-dom';
+import App from './app/App';
+import store from './app/configureStore'
+// import CssBaseline from "@mui/material/CssBaseline";
 
-declare global {
-    interface Window {
-        __REDUX_DEVTOOLS_EXTENSION_COMPOSE__?: typeof compose;
-    }
-}
+window.localStorage.setItem('debug', '*');
+const container = document.getElementById('app');
+const root = createRoot(container!);
 
-const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
-
-const store = createStore(reducer,
-    composeEnhancers(applyMiddleware(thunk))
+root.render(
+    <React.StrictMode>
+        <Provider store={store}>
+            <Router>
+                <App/>
+            </Router>
+        </Provider>
+    </React.StrictMode>
 );
-
-render(
-    (<Provider store={store}>
-        <Root/>
-    </Provider>),
-    document.getElementById('app'));

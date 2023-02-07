@@ -1,32 +1,192 @@
 import {combineReducers} from "redux";
-import {ProductMix, ProductMixField} from "../../types";
-import {ActionInterface, ActionPayload, buildPath, fetchJSON} from "chums-ducks";
-import {ThunkAction} from "redux-thunk";
-import {RootState} from "../index";
 import {defaultMixSort, productMixSorter} from "./utils";
-import {fetchSettingsSucceeded} from "../settings";
-import {SortProps} from "chums-components";
-import {CurrentValueState, initialCurrentValueState, initialListState, ListState} from "../redux-utils";
+import {
+    createDefaultListActions,
+    CurrentValueState,
+    initialCurrentValueState,
+    initialListState,
+    ListState
+} from "../redux-utils";
 import {ProductMixInfo} from "chums-types";
 import {getPreference, localStorageKeys} from "../../api/preferences";
-import {createReducer} from "@reduxjs/toolkit";
+import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {emptyMix, fetchMix, fetchMixList, postMix} from "../../api/mixes";
+import {QueryStatus} from "@reduxjs/toolkit/query";
+import {RootState} from "../../app/configureStore";
 
-export const initialMixListState = ():ListState<ProductMixInfo> => ({
+
+export const {
+    setSearch,
+    setPage,
+    setRowsPerPage,
+    toggleShowInactive,
+    setSort
+} = createDefaultListActions<ProductMixInfo>('mixes/list');
+
+export const initialMixListState = (): ListState<ProductMixInfo> => ({
     ...initialListState,
     rowsPerPage: getPreference(localStorageKeys.mixesRowsPerPage, 25),
     sort: {...defaultMixSort},
 });
 
-const initialCurrentMixState:CurrentValueState<ProductMixInfo> = {
+const initialCurrentMixState: CurrentValueState<ProductMixInfo> = {
     ...initialCurrentValueState,
 }
 
-const listReducer = createReducer(initialMixListState, (builder) => {
+export const setNewMix = createAction('mixes/current/new');
 
+export const loadMixes = createAsyncThunk<ProductMixInfo[]>(
+    'mixes/list/load',
+    async () => {
+        return await fetchMixList();
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectLoading(state);
+        }
+    }
+)
+
+export const loadMix = createAsyncThunk<ProductMixInfo | null, number | undefined>(
+    'mixes/current/load',
+    async (arg) => {
+        return await fetchMix(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !(selectLoading(state) || selectMixLoading(state) || selectMixSaving(state));
+        }
+    }
+)
+
+export const saveMix = createAsyncThunk<ProductMixInfo, ProductMixInfo>(
+    'mixes/current/save',
+    async (arg) => {
+        return postMix(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !(selectLoading(state) || selectMixLoading(state) || selectMixSaving(state));
+        }
+    }
+)
+
+export const selectMixList = (state: RootState) => state.mixes.list.values;
+export const selectInactiveCount = (state:RootState)  => state.mixes.list.values.filter(item => !item.active).length;
+
+
+export const selectSearch = (state: RootState) => state.mixes.list.search;
+
+export const selectShowInactive = (state: RootState) => state.mixes.list.showInactive;
+export const selectPage = (state: RootState) => state.mixes.list.page;
+export const selectRowsPerPage = (state: RootState) => state.mixes.list.rowsPerPage;
+export const selectSort = (state: RootState) => state.mixes.list.sort;
+
+export const selectLoading = (state: RootState) => state.mixes.list.loading === QueryStatus.pending;
+
+export const selectCurrentMix = (state: RootState) => state.mixes.current.value;
+
+export const selectMixLoading = (state: RootState) => state.mixes.current.loading === QueryStatus.pending
+export const selectMixSaving = (state: RootState) => state.mixes.current.saving === QueryStatus.pending;
+
+export const selectFilteredMixesList = createSelector(
+    [selectMixList, selectSearch, selectShowInactive, selectSort],
+    (list, search, showInactive, sort) => {
+        let re = /^/i;
+        try {
+            re = new RegExp(search, 'i');
+        } catch (err) {
+        }
+        return list
+            .filter(mix => showInactive || mix.active)
+            .filter(mix => re.test(mix.code) || re.test(mix.description || '') || re.test(mix.notes || ''))
+            .sort(productMixSorter(sort));
+    }
+)
+
+const listReducer = createReducer(initialMixListState, (builder) => {
+    builder
+        .addCase(setSearch, (state, action) => {
+            state.search = action.payload;
+            state.page = 0;
+        })
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            state.page = 0;
+        })
+        .addCase(setSort, (state, action) => {
+            state.sort = action.payload;
+            state.page = 0;
+        })
+        .addCase(setPage, (state, action) => {
+            state.page = action.payload;
+        })
+        .addCase(setRowsPerPage, (state, action) => {
+            state.rowsPerPage = action.payload;
+            state.page = 0;
+        })
+        .addCase(loadMixes.pending, (state) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadMixes.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.values = action.payload.sort(productMixSorter(defaultMixSort));
+        })
+        .addCase(loadMixes.rejected, (state, action) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(loadMix.fulfilled, (state, action) => {
+            if (action.payload && action.payload.id) {
+                state.values = [
+                    ...state.values.filter(mix => mix.id !== action.payload?.id),
+                    action.payload,
+                ].sort(productMixSorter(defaultMixSort));
+            }
+        })
+        .addCase(saveMix.fulfilled, (state, action) => {
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(mix => mix.id !== action.payload?.id),
+                    action.payload,
+                ].sort(productMixSorter(defaultMixSort));
+            }
+        })
 });
 
 const currentMixReducer = createReducer(initialCurrentMixState, (builder) => {
-
+    builder
+        .addCase(loadMixes.fulfilled, (state, action) => {
+            if (state.value?.id) {
+                const [current] = action.payload.filter(mix => mix.id === state.value?.id);
+                state.value = current;
+            }
+        })
+        .addCase(loadMix.pending, (state) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadMix.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(loadMix.rejected, (state) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(saveMix.pending, (state) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(saveMix.fulfilled, (state, action) => {
+            state.saving = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(saveMix.rejected, (state) => {
+            state.saving = QueryStatus.rejected;
+        })
+        .addCase(setNewMix, (state) => {
+            state.value = {...emptyMix}
+        })
 });
 
 const mixesReducer = combineReducers({
@@ -35,255 +195,3 @@ const mixesReducer = combineReducers({
 });
 
 export default mixesReducer;
-
-
-export interface MixesPayload extends ActionPayload {
-    mixes?: ProductMix[],
-    mix?: ProductMix,
-    search?: string,
-    field?: ProductMixField,
-    value?: unknown
-}
-
-export interface MixesAction extends ActionInterface {
-    payload?: MixesPayload,
-}
-
-export interface MixesThunkAction extends ThunkAction<any, RootState, unknown, MixesAction> {
-}
-
-export const defaultProductMix: ProductMix = {
-    id: 0,
-    code: '',
-    description: '',
-    notes: null,
-    tags: {},
-    active: true,
-}
-
-export const mixesSearchChanged = 'mixes/searchChanged';
-export const mixesFilterInactiveChanged = 'mixes/filterInactiveChanged';
-
-export const fetchMixesRequested = 'mixes/fetchRequested';
-export const fetchMixesSucceeded = 'mixes/fetchSucceeded';
-export const fetchMixesFailed = 'mixes/fetchFailed';
-
-export const mixSelected = 'mixes/selected'
-export const mixChanged = 'mixes/selected/mixChanged';
-
-export const fetchMixRequested = 'mixes/selected/fetchRequested';
-export const fetchMixSucceeded = 'mixes/selected/fetchSucceeded';
-export const fetchMixFailed = 'mixes/selected/fetchFailed';
-
-export const saveMixRequested = 'mixes/selected/saveRequested';
-export const saveMixSucceeded = 'mixes/selected/saveSucceeded';
-export const saveMixFailed = 'mixes/selected/saveFailed';
-
-
-export const searchChangedAction = (search: string) => ({type: mixesSearchChanged, payload: {search}});
-export const filterInactiveChangedAction = () => ({type: mixesFilterInactiveChanged});
-export const mixChangedAction = (field: ProductMixField, value: unknown) => ({
-    type: mixChanged,
-    payload: {field, value}
-});
-
-export const fetchListAction = (): MixesThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            dispatch({type: fetchMixesRequested});
-            const url = buildPath('/api/operations/sku/mixes',);
-            const {list} = await fetchJSON(url, {cache: "no-cache"});
-            dispatch({type: fetchMixesSucceeded, payload: {mixes: list || []}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("loadColorUPCList()", error.message);
-                return dispatch({type: fetchMixesFailed, payload: {error, context: fetchMixesRequested}})
-            }
-            console.error("loadColorUPCList()", error);
-        }
-    }
-
-export const fetchMixAction = (mix: ProductMix): MixesThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            if (!mix.id) {
-                return dispatch({type: mixSelected, payload: {mix}});
-            }
-            dispatch({type: fetchMixRequested, payload: {mix}});
-            const url = buildPath('/api/operations/sku/mixes/:id', {id: mix.id});
-            const {list} = await fetchJSON(url, {cache: "no-cache"});
-            dispatch({type: fetchMixSucceeded, payload: {mix: list[0] || defaultProductMix}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("fetchMixAction()", error.message);
-                return dispatch({type: fetchMixFailed, payload: {error, context: fetchMixRequested}})
-            }
-            console.error("fetchMixAction()", error);
-        }
-    }
-
-export const saveMixAction = (mix: ProductMix): MixesThunkAction =>
-    async (dispatch, getState) => {
-        try {
-            const state = getState();
-            if (selectLoading(state)) {
-                return;
-            }
-            dispatch({type: saveMixRequested});
-            let url = '/api/operations/sku/mixes';
-            let method = 'POST';
-            if (mix.id) {
-                url = '/api/operations/sku/mixes/:id'.replace(':id', encodeURIComponent(mix.id));
-                method = 'PUT';
-            }
-            const res = await fetchJSON(url, {method, body: JSON.stringify(mix)});
-            dispatch({type: saveMixSucceeded, payload: {mix: res.mix}});
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                console.log("saveMixAction()", error.message);
-                return dispatch({type: saveMixFailed, payload: {error, context: saveMixRequested}})
-            }
-            console.error("saveMixAction()", error);
-        }
-    }
-
-export const selectMixesList = (sort: SortProps<ProductMix>) => (state: RootState): ProductMix[] => {
-    const search = selectSearch(state);
-    const filterInactive = selectFilterInactive(state);
-    let re = /^/i;
-    try {
-        re = new RegExp(search, 'i');
-    } catch (err) {
-    }
-    return state.mixes.list
-        .filter(mix => !filterInactive || mix.active)
-        .filter(mix => re.test(mix.code) || re.test(mix.description || '') || re.test(mix.notes || ''));
-}
-export const selectMixesCount = (state: RootState) => state.mixes.list.length;
-export const selectActiveMixesCount = (state: RootState) => state.mixes.list.filter(mix => mix.active).length;
-export const selectSearch = (state: RootState) => state.mixes.search;
-export const selectFilterInactive = (state: RootState) => state.mixes.filterInactive;
-export const selectLoading = (state: RootState) => state.mixes.loading;
-export const selectMix = (state: RootState) => state.mixes.selected;
-export const selectMixLoading = (state: RootState) => state.mixes.selectedLoading;
-export const selectMixSaving = (state: RootState) => state.mixes.selectedSaving;
-
-const searchReducer = (state: string = '', action: MixesAction): string => {
-    const {type, payload} = action;
-    switch (type) {
-    case mixesSearchChanged:
-        return payload?.search || '';
-    default:
-        return state;
-    }
-}
-
-const filterInactiveReducer = (state: boolean = true, action: MixesAction): boolean => {
-    switch (action.type) {
-    case mixesFilterInactiveChanged:
-        return !state;
-    default:
-        return state;
-    }
-}
-
-const _listReducer = (state: ProductMix[] = [], action: MixesAction): ProductMix[] => {
-    const {type, payload} = action;
-    switch (type) {
-    case fetchSettingsSucceeded:
-    case fetchMixesSucceeded:
-        if (payload?.mixes) {
-            return [...payload.mixes].sort(productMixSorter(defaultMixSort));
-        }
-        return state;
-    case fetchMixSucceeded:
-    case saveMixSucceeded:
-        if (payload?.mix) {
-            return [
-                ...state.filter(mix => mix.id !== payload.mix?.id),
-                payload.mix,
-            ].sort(productMixSorter(defaultMixSort));
-        }
-        return state;
-    default:
-        return state;
-    }
-}
-
-const loadingReducer = (state: boolean = false, action: MixesAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchMixesRequested:
-        return true;
-    case fetchMixesSucceeded:
-    case fetchMixesFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-
-const selectedLoadingReducer = (state: boolean = false, action: MixesAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case fetchMixRequested:
-        return true;
-    case fetchMixesSucceeded:
-    case fetchMixFailed:
-        return false;
-    default:
-        return state;
-    }
-};
-
-const selectedReducer = (state: ProductMix = defaultProductMix, action: MixesAction): ProductMix => {
-    const {type, payload} = action;
-    switch (type) {
-    case fetchMixRequested:
-    case fetchMixSucceeded:
-        if (payload?.mix) {
-            return payload.mix;
-        }
-        return defaultProductMix;
-    case mixChanged:
-        if (payload?.field) {
-            return {...state, [payload.field]: payload.value}
-        }
-        return state;
-    default:
-        return state;
-    }
-}
-
-const selectedSavingReducer = (state: boolean = false, action: MixesAction): boolean => {
-    const {type} = action;
-    switch (type) {
-    case saveMixRequested:
-        return true;
-    case saveMixFailed:
-    case saveMixSucceeded:
-        return false;
-    default:
-        return state;
-    }
-};
-
-
-// export default combineReducers({
-//     list: _listReducer,
-//     search: searchReducer,
-//     filterInactive: filterInactiveReducer,
-//     loading: loadingReducer,
-//     selected: selectedReducer,
-//     selectedLoading: selectedLoadingReducer,
-//     selectedSaving: selectedSavingReducer,
-// })

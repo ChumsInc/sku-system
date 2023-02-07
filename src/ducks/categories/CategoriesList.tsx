@@ -2,8 +2,8 @@ import React from "react";
 import {useSelector} from "react-redux";
 import {
     loadCategory,
-    selectCategoriesPage,
-    selectCategoriesRowsPerPage,
+    selectPage,
+    selectRowsPerPage,
     selectCategoryList,
     selectCurrentCategory,
     selectSort,
@@ -38,8 +38,8 @@ const CategoriesList: React.FC = () => {
     const dispatch = useAppDispatch();
     const sort = useSelector(selectSort);
     const list = useSelector(selectCategoryList);
-    const page = useSelector(selectCategoriesPage);
-    const rowsPerPage = useSelector(selectCategoriesRowsPerPage);
+    const page = useSelector(selectPage);
+    const rowsPerPage = useSelector(selectRowsPerPage);
     const selected = useSelector(selectCurrentCategory);
 
     const onSelectRow = (row: ProductCategory) => dispatch(loadCategory(row));
@@ -61,8 +61,9 @@ const CategoriesList: React.FC = () => {
                            onChangeSort={sortChangedHandler}
                            rowClassName={rowClassName}
                            selected={categoryKey(selected)} onSelectRow={onSelectRow}/>
-            <TablePagination page={page} onChangePage={onChangePage}
+            <TablePagination page={page} onChangePage={onChangePage} bsSize="sm"
                              rowsPerPage={rowsPerPage} onChangeRowsPerPage={onChangeRowsPerPage}
+                             showFirst showLast
                              count={list.length}/>
         </>
     )

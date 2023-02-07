@@ -10,6 +10,7 @@ import {loadColorsList} from "../colors";
 import {loadColorUPCList} from "../colorUPC";
 import {loadSKUGroupList} from "../groups";
 import {RootState} from "../../app/configureStore";
+import {loadMixes} from "../mixes";
 
 export interface SettingsState {
     loading: QueryStatus;
@@ -29,6 +30,7 @@ export const loadSettings = createAsyncThunk<SettingsResponse>('' +
         dispatch(loadColorsList());
         dispatch(loadColorUPCList());
         dispatch(loadSKUGroupList());
+        dispatch(loadMixes())
         return await fetchSettings();
     },
     {

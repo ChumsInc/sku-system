@@ -8,7 +8,7 @@ import {
     selectPage,
     selectRowsPerPage,
     selectCurrentSKU,
-    selectSKUListLoading,
+    selectListLoading,
     selectSort
 } from "./selectors";
 import {loadSKU, loadSKUList, setPage, setRowsPerPage, setSort} from "./actions";
@@ -39,7 +39,7 @@ const rowClassName = (row: BaseSKU) => classNames({
 
 const BaseSKUList = () => {
     const dispatch = useAppDispatch();
-    const loading = useSelector(selectSKUListLoading);
+    const loading = useSelector(selectListLoading);
     const loaded = useSelector(selectListLoaded);
     const sort = useSelector(selectSort);
     const list = useSelector(selectFilteredSKUList);
@@ -64,16 +64,16 @@ const BaseSKUList = () => {
     return (
         <Fragment>
             {loading && <LoadingProgressBar animated striped className="mb-1"/>}
-            <SortableTable keyField={"Category4"} fields={tableFields}
+            <SortableTable keyField={"sku"} fields={tableFields}
                            data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
                            size="xs"
                            currentSort={sort}
                            onChangeSort={(sort) => dispatch(setSort(sort))}
                            rowClassName={rowClassName}
-                           selected={selected?.Category4}
+                           selected={selected?.sku}
                            onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={pageChangeHandler} rowsPerPage={rowsPerPage}
-                             onChangeRowsPerPage={rowsPerPageChangeHandler} count={list.length}/>
+                             onChangeRowsPerPage={rowsPerPageChangeHandler} count={list.length} bsSize="sm"/>
         </Fragment>
     )
 }

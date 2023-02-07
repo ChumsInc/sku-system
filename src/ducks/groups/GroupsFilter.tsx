@@ -1,45 +1,43 @@
 import React, {ChangeEvent} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {
-    defaultSKUGroup,
     loadSKUGroupList,
-    loadSKUGroup,
-    toggleFilterInactive,
-    setSearch,
-    selectActiveGroupsCount,
     selectFilterInactive,
+    selectInactiveCount,
     selectListLoading,
-    selectGroupsCount,
-    selectSearch
+    selectSearch,
+    setNewSKUGroup,
+    setSearch,
+    toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-ducks";
+import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
+import {useAppDispatch} from "../../app/configureStore";
 
 const GroupsFilter: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);
-    const mixesCount = useSelector(selectGroupsCount);
-    const activeMixesCount = useSelector(selectActiveGroupsCount);
+    const inactive = useSelector(selectInactiveCount);
     const loading = useSelector(selectListLoading);
 
     const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
-    const onClickFilterInactive = () => dispatch(toggleFilterInactive());
-    const onClickNewColor = () => dispatch(loadSKUGroup(defaultSKUGroup));
+    const onClickFilterInactive = () => dispatch(toggleShowInactive());
+    const newSKUGroupHandler = () => dispatch(setNewSKUGroup());
     const onClickReload = () => dispatch(loadSKUGroupList());
 
     return (
-        <div className="row g-3">
+        <div className="row g-3 align-items-baseline">
             <div className="col-auto">
                 <ShowInactiveCheckbox checked={!filterInactive} onChange={onClickFilterInactive}
-                                      countAll={mixesCount} countActive={activeMixesCount}/>
+                                      countInactive={inactive}/>
             </div>
             <div className="col-auto">
                 <input type="search" placeholder="Search" value={search} onChange={onChangeSearch}
                        className="form-control form-control-sm"/>
             </div>
             <div className="col-auto">
-                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={onClickNewColor}>
+                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={newSKUGroupHandler}>
                     New SKU Group
                 </button>
             </div>

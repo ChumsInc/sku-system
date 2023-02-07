@@ -18,7 +18,7 @@ const ActiveButtonGroup:React.FC<ActiveButtonGroupProps> = ({active, disabled, o
     };
 
     return (
-        <div className="btn-group btn-group-sm">
+        <div className="btn-group btn-group-sm my-1">
             <button type="button"
                     className={classNames('btn btn-sm', activeButtonClassName)}
                     disabled={disabled}

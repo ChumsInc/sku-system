@@ -1,56 +1,40 @@
 import {combineReducers} from "redux";
 import {defaultColorSort, productColorSorter} from "./utils";
-import {SortProps} from "chums-components";
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {fetchProductColor, fetchProductColorsList, postProductColor} from "../../api/color";
 import {selectIsAdmin} from "../users";
 import {RootState} from "../../app/configureStore";
 import {ProductColor} from "chums-types";
+import {
+    createDefaultListActions,
+    CurrentValueState,
+    initialCurrentValueState,
+    initialListState,
+    ListState
+} from "../redux-utils";
+import {Root} from "react-dom/client";
 
-export interface ColorsListState {
-    colors: ProductColor[],
-    search: string;
-    filterInactive: boolean;
-    loading: QueryStatus;
-    loaded: boolean;
-    page: number;
-    rowsPerPage: number;
-    sort: SortProps<ProductColor>,
-}
 
-const initialColorsListState = (): ColorsListState => ({
-    colors: [],
-    search: '',
-    filterInactive: true,
-    loading: QueryStatus.uninitialized,
-    loaded: false,
-    page: 0,
+const initialColorsListState = (): ListState<ProductColor> => ({
+    ...initialListState,
     rowsPerPage: getPreference<number>(localStorageKeys.colorsRowsPerPage, 25),
+    showInactive: getPreference<boolean>(localStorageKeys.colorsShowInactive, false),
     sort: {...defaultColorSort},
 });
 
-export interface SelectedColorState {
-    color: ProductColor | null;
-    loading: QueryStatus;
-    saving: QueryStatus;
+const initialSelectColorsState: CurrentValueState<ProductColor> = {
+    ...initialCurrentValueState,
 }
 
-const initialSelectColorsState: SelectedColorState = {
-    color: null,
-    loading: QueryStatus.uninitialized,
-    saving: QueryStatus.uninitialized,
-}
-
-
-export const setSearch = createAction<string>('colors/list/setSearch');
-
-export const toggleFilterInactive = createAction<boolean | undefined>('colors/list/toggleFilterInactive');
-
-export const setPage = createAction<number>('colors/list/setPage');
-export const setRowsPerPage = createAction<number>('colors/list/setRowsPerPage');
-export const setSort = createAction<SortProps<ProductColor>>('colors/list/setSort');
+export const {
+    setSearch,
+    setPage,
+    setRowsPerPage,
+    setSort,
+    toggleShowInactive
+} = createDefaultListActions<ProductColor>('colors/list');
 
 export const loadColorsList = createAsyncThunk<ProductColor[]>(
     'colors/list/load',
@@ -60,53 +44,55 @@ export const loadColorsList = createAsyncThunk<ProductColor[]>(
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectLoading(state);
+            return !selectListLoading(state);
         }
     }
 )
 
 export const loadProductColor = createAsyncThunk<ProductColor | null, ProductColor>(
-    'colors/selected/load',
+    'colors/current/load',
     async (arg) => {
         return await fetchProductColor(arg.id);
     },
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectLoading(state);
+            return !selectListLoading(state);
         }
     }
 )
 export const saveProductColor = createAsyncThunk<ProductColor, ProductColor>(
-    'colors/selected/save',
+    'colors/current/save',
     async (arg) => {
         return await postProductColor(arg);
     },
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return selectIsAdmin(state) && !selectCurrentColorLoading(state) && !selectCurrentColorSaving(state);
+            return selectIsAdmin(state) && !selectLoading(state) && !selectSaving(state);
         }
     }
 )
 
-export const selectColorsList = (state: RootState) => state.colors.list.colors;
-export const selectColorsListLoaded = (state:RootState) => state.colors.list.loaded;
+export const selectColorsList = (state: RootState) => state.colors.list.values;
+export const selectColorsListLoaded = (state: RootState) => state.colors.list.loaded;
 
-export const selectColorsCount = (state: RootState) => state.colors.list.colors.length;
-export const selectActiveColorsCount = (state: RootState) => state.colors.list.colors.filter(color => color.active).length;
+export const selectInactiveCount = (state: RootState) => state.colors.list.values.filter(color => !color.active).length;
 export const selectSearch = (state: RootState) => state.colors.list.search;
-export const selectFilterInactive = (state: RootState) => state.colors.list.filterInactive;
+export const selectShowInactive = (state: RootState) => state.colors.list.showInactive;
 export const selectSort = (state: RootState) => state.colors.list.sort;
+export const selectPage = (state:RootState) => state.colors.list.page;
+export const selectRowsPerPage = (state:RootState) => state.colors.list.rowsPerPage;
 
-export const selectLoading = (state: RootState) => state.colors.list.loading === QueryStatus.pending;
-export const selectCurrentColor = (state: RootState) => state.colors.selected.color;
-export const selectCurrentColorLoading = (state: RootState) => state.colors.selected.loading === QueryStatus.pending;
-export const selectCurrentColorSaving = (state: RootState) => state.colors.selected.saving === QueryStatus.pending;
+export const selectListLoading = (state: RootState) => state.colors.list.loading === QueryStatus.pending;
+
+export const selectLoading = (state:RootState) => state.colors.current.loading === QueryStatus.pending;
+export const selectSaving = (state:RootState) => state.colors.current.saving === QueryStatus.pending;
+export const selectCurrentColor = (state: RootState) => state.colors.current.value;
 
 export const selectFilteredColorsList = createSelector(
-    [selectColorsList, selectSearch, selectFilterInactive, selectSort],
-    (list, search, filterInactive, sort) => {
+    [selectColorsList, selectSearch, selectShowInactive, selectSort],
+    (list, search, showInactive, sort) => {
         let re = /^/i;
         try {
             re = new RegExp(search, 'i');
@@ -114,7 +100,7 @@ export const selectFilteredColorsList = createSelector(
         }
 
         return list
-            .filter(color => !filterInactive || color.active)
+            .filter(color => showInactive || color.active)
             .filter(color => re.test(color.code) || re.test(color.description || ''))
             .sort(productColorSorter(sort));
     }
@@ -127,57 +113,61 @@ const colorsListReducer = createReducer(initialColorsListState, (builder) => {
         })
         .addCase(loadColorsList.fulfilled, (state, action) => {
             state.loading = QueryStatus.fulfilled;
-            state.colors = action.payload.sort(productColorSorter(defaultColorSort));
+            state.values = action.payload.sort(productColorSorter(defaultColorSort));
             state.loaded = true;
         })
         .addCase(loadColorsList.rejected, (state) => {
             state.loading = QueryStatus.rejected;
         })
         .addCase(loadProductColor.fulfilled, (state, action) => {
-            if (action.payload) {
-                state.colors = [
-                    ...state.colors.filter(color => color.id !== action.payload?.id),
+            if (action.payload && action.payload.id) {
+                state.values = [
+                    ...state.values.filter(color => color.id !== action.payload?.id),
                     action.payload,
                 ].sort(productColorSorter(defaultColorSort));
             }
         })
         .addCase(saveProductColor.fulfilled, (state, action) => {
-            state.colors = [
-                ...state.colors.filter(color => color.id !== action.payload?.id),
+            state.values = [
+                ...state.values.filter(color => color.id !== action.payload?.id),
                 action.payload,
             ].sort(productColorSorter(defaultColorSort));
         })
         .addCase(setSearch, (state, action) => {
             state.search = action.payload;
+            state.page = 0;
         })
-        .addCase(toggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            state.page = 0;
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
         })
         .addCase(setRowsPerPage, (state, action) => {
             state.rowsPerPage = action.payload;
+            state.page = 0;
             setPreference<number>(localStorageKeys.colorsRowsPerPage, action.payload);
         })
         .addCase(setSort, (state, action) => {
             state.sort = action.payload;
+            state.page = 0;
         })
 });
 
 const selectedColorReducer = createReducer(initialSelectColorsState, (builder) => {
     builder
         .addCase(loadColorsList.fulfilled, (state, action) => {
-            const [color] = action.payload.filter(color => color.id === state.color?.id);
+            const [color] = action.payload.filter(color => color.id === state.value?.id);
             if (color) {
-                state.color = color;
+                state.value = color;
             }
         })
         .addCase(loadProductColor.pending, (state) => {
             state.loading = QueryStatus.pending;
         })
         .addCase(loadProductColor.fulfilled, (state, action) => {
-            state.color = action.payload;
+            state.value = action.payload;
             state.loading = QueryStatus.fulfilled;
         })
         .addCase(loadProductColor.rejected, (state, action) => {
@@ -187,7 +177,7 @@ const selectedColorReducer = createReducer(initialSelectColorsState, (builder) =
             state.saving = QueryStatus.pending;
         })
         .addCase(saveProductColor.fulfilled, (state, action) => {
-            state.color = action.payload;
+            state.value = action.payload;
             state.saving = QueryStatus.fulfilled;
         })
         .addCase(saveProductColor.rejected, (state, action) => {
@@ -197,7 +187,7 @@ const selectedColorReducer = createReducer(initialSelectColorsState, (builder) =
 
 const colorsReducer = combineReducers({
     list: colorsListReducer,
-    selected: selectedColorReducer,
+    current: selectedColorReducer,
 });
 
 export default colorsReducer;

@@ -1,144 +1,151 @@
-import {RootState} from './../../app/configureStore'
+import {RootState} from '../../app/configureStore'
 import {categorySorter} from "./utils";
-import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {combineReducers, createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {defaultCategory, fetchCategory, fetchCategoryList, postCategory} from "../../api/categories";
 import {ProductCategory} from "chums-types";
 import {QueryStatus} from "@reduxjs/toolkit/query";
 import {SortProps} from "chums-components";
 import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
+import {
+    createDefaultListActions,
+    CurrentValueState,
+    initialCurrentValueState,
+    initialListState,
+    ListState
+} from "../redux-utils";
 
 const defaultSort: SortProps<ProductCategory> = {
-    field: 'id',
+    field: 'code',
     ascending: true,
 }
 
-export interface CategoriesState {
-    search: string;
-    filterInactive: boolean;
-    list: ProductCategory[];
-    loadingList: QueryStatus;
-    saving: QueryStatus;
-    selected: ProductCategory | null;
-    loadingCategory: QueryStatus;
-    sort: SortProps<ProductCategory>;
-    page: number;
-    rowsPerPage: number;
+const initialCategoriesListState = (): ListState<ProductCategory> => ({
+    ...initialListState,
+    sort: defaultSort,
+    showInactive: getPreference(localStorageKeys.categoriesShowInactive, false),
+})
+
+const initialCurrentCategoryState: CurrentValueState<ProductCategory> = {
+    ...initialCurrentValueState,
 }
 
-const initialCategoriesState: CategoriesState = {
-    search: '',
-    filterInactive: true,
-    list: [],
-    loadingList: QueryStatus.uninitialized,
-    saving: QueryStatus.uninitialized,
-    selected: null,
-    loadingCategory: QueryStatus.uninitialized,
-    sort: {...defaultSort},
-    page: 0,
-    rowsPerPage: getPreference(localStorageKeys.categoriesRowsPerPage, 25),
-}
+export const {
+    setSort,
+    setSearch,
+    setPage,
+    setRowsPerPage,
+    toggleShowInactive
+} = createDefaultListActions<ProductCategory>('categories/list');
 
-export const setCategoriesSearch = createAction<string>('categories/searchChanged');
 
-export const categoriesToggleFilterInactive = createAction<boolean | undefined>('categories/toggleFilterInactive');
-
-export const setNewCategory = createAction('categories/setNewCategory');
-
-export const setPage = createAction<number>('categories/setPage');
-
-export const setRowsPerPage = createAction<number>('categories/setRowsPerPage');
-
-export const setSort = createAction<SortProps<ProductCategory>>('categories/setSort');
+export const setNewCategory = createAction('categories/current/new');
 
 
 export const loadCategoryList = createAsyncThunk<ProductCategory[]>(
-    'categories/loadCategoriesList',
+    'categories/list/load',
     async () => {
         return await fetchCategoryList();
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectCategoryListLoading(state) && !selectCategorySaving(state);
+            return !selectListLoading(state) && !selectSaving(state);
         }
     }
 )
 
 export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
-    'categories/loadCategory',
+    'categories/current/load',
     async (arg) => {
         return await fetchCategory(arg.id);
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectCategoryListLoading(state);
+            return !selectListLoading(state);
         }
     }
 )
 
 export const saveCategory = createAsyncThunk<ProductCategory, ProductCategory>(
-    'categories/saveCategory',
+    'categories/current/save',
     async (arg) => {
         return await postCategory(arg);
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return selectIsAdmin(state) && !selectCategorySaving(state);
+            return selectIsAdmin(state) && !selectSaving(state);
         }
     }
 )
 
-const categoriesReducer = createReducer(initialCategoriesState, (builder) => {
+
+export const selectSearch = (state: RootState) => state.categories.list.search;
+
+export const selectShowInactive = (state: RootState) => state.categories.list.showInactive;
+
+export const selectList = (state: RootState) => state.categories.list.values;
+
+export const selectSort = (state: RootState) => state.categories.list.sort;
+
+export const selectCategoryList = createSelector(
+    [selectList, selectSort, selectShowInactive, selectSearch],
+    (list, sort, showInactive, search) => {
+        let re = /^/i;
+        try {
+            re = new RegExp(search, 'i');
+        } catch (err) {
+        }
+
+        return list
+            .filter(cat => showInactive || cat.active)
+            .filter(cat => re.test(cat.code) || re.test(cat.description ?? '') || re.test(cat.notes ?? ''))
+            .sort(categorySorter(sort));
+    }
+)
+
+
+export const selectInactiveCount = (state: RootState) => state.categories.list.values.filter(g => !g.active).length;
+
+export const selectCurrentCategory = (state: RootState): ProductCategory | null => state.categories.current.value;
+
+export const selectListLoading = (state: RootState) => state.categories.list.loading === QueryStatus.pending;
+
+export const selectLoading = (state: RootState) => state.categories.current.loading === QueryStatus.pending;
+
+export const selectSaving = (state: RootState) => state.categories.current.saving === QueryStatus.pending;
+
+export const selectPage = (state: RootState) => state.categories.list.page;
+
+export const selectRowsPerPage = (state: RootState) => state.categories.list.rowsPerPage;
+
+
+const listReducer = createReducer(initialCategoriesListState, (builder) => {
     builder
-        .addCase(setCategoriesSearch, (state, action) => {
-            state.search = action.payload;
-        })
-        .addCase(categoriesToggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
-        })
-        .addCase(setNewCategory, (state, action) => {
-            state.selected = {...defaultCategory};
-        })
         .addCase(loadCategoryList.pending, (state) => {
-            state.loadingList = QueryStatus.pending;
+            state.loading = QueryStatus.pending;
         })
         .addCase(loadCategoryList.fulfilled, (state, action) => {
-            state.loadingList = QueryStatus.fulfilled;
-            state.list = action.payload.sort(categorySorter(defaultSort));
+            state.loading = QueryStatus.fulfilled;
+            state.values = action.payload.sort(categorySorter(defaultSort));
         })
-        .addCase(loadCategoryList.fulfilled, (state) => {
-            state.loadingList = QueryStatus.rejected;
-        })
-        .addCase(loadCategory.pending, (state, action) => {
-            state.loadingCategory = QueryStatus.pending;
+        .addCase(loadCategoryList.rejected, (state) => {
+            state.loading = QueryStatus.rejected;
         })
         .addCase(loadCategory.fulfilled, (state, action) => {
-            state.loadingCategory = QueryStatus.fulfilled;
             if (action.payload && action.payload.id) {
-                state.list = [
-                    ...state.list.filter(cat => cat.id !== action.payload?.id),
+                state.values = [
+                    ...state.values.filter(cat => cat.id !== action.payload?.id),
                     action.payload,
                 ].sort(categorySorter(defaultSort));
             }
-        })
-        .addCase(loadCategory.rejected, (state, action) => {
-            state.loadingCategory = QueryStatus.rejected;
-        })
-        .addCase(saveCategory.pending, (state, action) => {
-            state.saving = QueryStatus.pending;
         })
         .addCase(saveCategory.fulfilled, (state, action) => {
-            state.saving = QueryStatus.fulfilled
-            state.selected = action.payload;
             if (action.payload) {
-                state.list = [
-                    ...state.list.filter(cat => cat.id !== action.payload?.id),
+                state.values = [
+                    ...state.values.filter(cat => cat.id !== action.payload?.id),
                     action.payload,
                 ].sort(categorySorter(defaultSort));
             }
-        })
-        .addCase(saveCategory.rejected, (state, action) => {
-            state.saving = QueryStatus.rejected;
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
@@ -150,49 +157,49 @@ const categoriesReducer = createReducer(initialCategoriesState, (builder) => {
         })
         .addCase(setSort, (state, action) => {
             state.sort = action.payload;
+            state.page = 0;
+        })
+        .addCase(setSearch, (state, action) => {
+            state.search = action.payload;
+            state.page = 0;
+        })
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            state.page = 0;
+            setPreference(localStorageKeys.categoriesShowInactive, state.showInactive);
+        })
+});
+
+const currentReducer = createReducer(initialCurrentCategoryState, (builder) => {
+    builder
+        .addCase(loadCategory.pending, (state, action) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadCategory.fulfilled, (state, action) => {
+            state.loading = QueryStatus.fulfilled;
+            state.value = action.payload;
+        })
+        .addCase(loadCategory.rejected, (state, action) => {
+            state.loading = QueryStatus.rejected;
+        })
+        .addCase(saveCategory.pending, (state, action) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(saveCategory.fulfilled, (state, action) => {
+            state.saving = QueryStatus.fulfilled
+            state.value = action.payload;
+        })
+        .addCase(saveCategory.rejected, (state, action) => {
+            state.saving = QueryStatus.rejected;
+        })
+        .addCase(setNewCategory, (state) => {
+            state.value = {...defaultCategory};
         })
 })
 
 
-export const selectSearch = (state: RootState) => state.categories.search;
-
-export const selectFilterInactive = (state: RootState) => state.categories.filterInactive;
-
-export const selectList = (state: RootState) => state.categories.list;
-
-export const selectSort = (state: RootState) => state.categories.sort;
-
-export const selectCategoryList = createSelector(
-    [selectList, selectSort, selectFilterInactive, selectSearch],
-    (list, sort, inactive, search) => {
-        let re = /^/i;
-        try {
-            re = new RegExp(search, 'i');
-        } catch (err) {
-        }
-
-        return list
-            .filter(cat => !inactive || cat.active)
-            .filter(cat => re.test(cat.code) || re.test(cat.description ?? '') || re.test(cat.notes ?? ''))
-            .sort(categorySorter(sort));
-    }
-)
-
-export const selectCategoriesCount = (state: RootState) => state.categories.list.length;
-
-export const selectActiveCategoriesCount = (state: RootState) => state.categories.list.filter(g => g.active).length;
-
-export const selectCurrentCategory = (state: RootState): ProductCategory | null => state.categories.selected;
-
-export const selectCategoryListLoading = (state: RootState) => state.categories.loadingList === QueryStatus.pending;
-
-export const selectCategoryLoading = (state: RootState) => state.categories.loadingCategory === QueryStatus.pending;
-
-export const selectCategorySaving = (state: RootState) => state.categories.saving === QueryStatus.pending;
-
-export const selectCategoriesPage = (state:RootState) => state.categories.page;
-
-export const selectCategoriesRowsPerPage = (state:RootState) => state.categories.rowsPerPage;
-
-
+const categoriesReducer = combineReducers({
+    list: listReducer,
+    current: currentReducer,
+})
 export default categoriesReducer;

@@ -1,38 +1,36 @@
 import React, {ChangeEvent} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {
-    defaultProductMix,
-    fetchListAction,
-    fetchMixAction,
-    filterInactiveChangedAction,
-    searchChangedAction,
-    selectActiveMixesCount,
-    selectFilterInactive,
+    loadMix,
+    loadMixes,
+    selectShowInactive,
+    selectInactiveCount,
     selectLoading,
-    selectMixesCount,
-    selectSearch
+    selectSearch,
+    setSearch,
+    toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-ducks";
+import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
+import {useAppDispatch} from "../../app/configureStore";
 
 const MixesFilter: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
-    const filterInactive = useSelector(selectFilterInactive);
-    const mixesCount = useSelector(selectMixesCount);
-    const activeMixesCount = useSelector(selectActiveMixesCount);
+    const showInactive = useSelector(selectShowInactive);
+    const inactive = useSelector(selectInactiveCount);
     const loading = useSelector(selectLoading);
 
-    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChangedAction(ev.target.value));
-    const onClickFilterInactive = () => dispatch(filterInactiveChangedAction());
-    const onClickNewColor = () => dispatch(fetchMixAction(defaultProductMix));
-    const onClickReload = () => dispatch(fetchListAction());
+    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
+    const showInactiveHandler = (ev: ChangeEvent<HTMLInputElement>) => dispatch(toggleShowInactive(ev.target.checked));
+    const onClickNewColor = () => dispatch(loadMix());
+    const onClickReload = () => dispatch(loadMixes());
 
     return (
-        <div className="row g-3">
+        <div className="row g-3 align-items-baseline">
             <div className="col-auto">
-                <ShowInactiveCheckbox checked={!filterInactive} onChange={onClickFilterInactive}
-                                      countAll={mixesCount} countActive={activeMixesCount}/>
+                <ShowInactiveCheckbox checked={showInactive} onChange={showInactiveHandler}
+                                      countInactive={inactive}/>
             </div>
             <div className="col-auto">
                 <input type="search" placeholder="Search" value={search} onChange={onChangeSearch}

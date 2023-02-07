@@ -4,12 +4,12 @@
 import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {saveCategory, selectCurrentCategory} from "./index";
+import {saveCategory, selectCurrentCategory, selectLoading, selectSaving} from "./index";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
 import {useAppDispatch} from "../../app/configureStore";
 import {Editable, ProductCategory} from "chums-types";
-import {Alert, FormColumn} from "chums-components";
+import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import {defaultCategory} from "../../api/categories";
 
 
@@ -17,6 +17,8 @@ const CategoriesEditor: React.FC = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentCategory);
+    const isSaving = useSelector(selectSaving)
+    const isLoading = useSelector(selectLoading);
     const [category, setCategory] = useState<ProductCategory & Editable>(selected ?? {...defaultCategory});
 
     useEffect(() => {
@@ -49,6 +51,7 @@ const CategoriesEditor: React.FC = () => {
         dispatch(saveCategory(category));
     }
 
+    // @TODO: add alert for duplicate category code
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Category Editor</h3>
@@ -74,7 +77,7 @@ const CategoriesEditor: React.FC = () => {
                 <ActiveButtonGroup active={category.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <button type="submit" className="btn btn-sm btn-primary">Save</button>
+                <SpinnerButton type="submit" color="primary" size="sm" spinning={isSaving} disabled={isSaving || isLoading}>Save</SpinnerButton>
             </FormColumn>
             {category.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>

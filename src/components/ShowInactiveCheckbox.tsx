@@ -1,26 +1,23 @@
 import React, {InputHTMLAttributes, useId} from "react";
 
 export interface ShowInactiveCheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
-    countAll?: number,
-    countActive?: number,
+    countInactive?: number;
 }
 
 const ShowInactiveCheckbox = ({
                                   id,
                                   checked,
-                                  countAll,
-                                  countActive,
+                                  countInactive,
                                   onChange,
                                   ...rest
                               }: ShowInactiveCheckboxProps) => {
     const elementId = useId();
-    const count = (checked ? countAll : countActive) || 0;
     return (
         <div className="form-check form-check-inline">
             <input type="checkbox" className="form-check-input" id={id ?? elementId} checked={checked}
                    onChange={onChange} {...rest} />
             <label className="form-check-label" htmlFor={id ?? elementId}>
-                Show Inactive {!!countAll && (<small>({count}/{countAll})</small>)}?
+                Include Inactive <small>({countInactive})</small>?
             </label>
         </div>
     )

@@ -1,6 +1,16 @@
 import {ProductMixInfo} from "chums-types";
 import {fetchJSON} from "chums-components";
 
+export const emptyMix:ProductMixInfo = {
+    id: 0,
+    code: "",
+    description: "",
+    active: true,
+    notes: '',
+    tags: {},
+}
+
+
 export async function fetchMixList():Promise<ProductMixInfo[]> {
     try {
         const url = '/api/operations/sku/mixes';
@@ -16,8 +26,11 @@ export async function fetchMixList():Promise<ProductMixInfo[]> {
     }
 }
 
-export async function fetchMix(arg:number):Promise<ProductMixInfo|null> {
+export async function fetchMix(arg:number|undefined):Promise<ProductMixInfo|null> {
     try {
+        if (!arg) {
+            return {...emptyMix};
+        }
         const url = `/api/operations/sku/mixes/${encodeURIComponent(arg)}`;
         const {list = []} = await fetchJSON<{list:ProductMixInfo[]}>(url, {cache: "no-cache"});
         return list[0] ?? null;

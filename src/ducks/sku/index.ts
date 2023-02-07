@@ -11,7 +11,7 @@ import {
     setSearch,
     setSKUGroupFilter,
     setSort,
-    toggleFilterInactive
+    toggleShowInactive
 } from "./actions";
 import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {BaseSKU, SKUGroup} from "chums-types";
@@ -27,6 +27,7 @@ const initialSKUListState = (): SKUListState => ({
     values: [],
     sort: {...defaultSort},
     rowsPerPage: getPreference(localStorageKeys.skuListRowsPerPage, 25),
+    showInactive: getPreference(localStorageKeys.skuListShowInactive, false),
     skuGroup: null,
 })
 
@@ -39,8 +40,9 @@ const skuListReducer = createReducer(initialSKUListState, (builder) => {
         .addCase(setSearch, (state, action) => {
             state.search = action.payload;
         })
-        .addCase(toggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            setPreference(localStorageKeys.skuListShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
@@ -68,14 +70,14 @@ const skuListReducer = createReducer(initialSKUListState, (builder) => {
         .addCase(loadSKU.fulfilled, (state, action) => {
             if (action.payload) {
                 state.values = [
-                    ...state.values.filter(row => row.Category4 === action.payload?.Category4),
+                    ...state.values.filter(row => row.id !== action.payload?.id),
                     action.payload,
                 ]
             }
         })
         .addCase(saveSKU.fulfilled, (state, action) => {
             state.values = [
-                ...state.values.filter(row => row.Category4 === action.payload.Category4),
+                ...state.values.filter(row => row.id !== action.payload.id),
                 action.payload,
             ];
         })

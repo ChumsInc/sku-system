@@ -4,9 +4,8 @@
 import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {defaultSKUGroup, saveSKUGroup, selectCurrentSKUGroup} from "./index";
-import {SKUGroupField} from "../../types";
-import {Alert, FormColumn} from "chums-components";
+import {defaultSKUGroup, saveSKUGroup, selectCurrentSKUGroup, selectLoading, selectSaving} from "./index";
+import {Alert, FormColumn, Spinner, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
 import TextArea from 'react-textarea-autosize';
@@ -18,6 +17,8 @@ const GroupEditor: React.FC = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentSKUGroup);
+    const saving = useSelector(selectSaving);
+    const loading = useSelector(selectLoading);
     const [group, setGroup] = useState<SKUGroup & Editable>(selected ?? {...defaultSKUGroup});
 
     useEffect(() => {
@@ -28,7 +29,7 @@ const GroupEditor: React.FC = () => {
         setGroup({...group, code: ev.target.value.toUpperCase(), changed: true});
     }
 
-    const onChange = (field: SKUGroupField) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const onChange = (field: keyof SKUGroup) => (ev: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         setGroup({...group, [field]: ev.target.value, changed: true})
     }
 
@@ -41,6 +42,7 @@ const GroupEditor: React.FC = () => {
         dispatch(saveSKUGroup(group));
     }
 
+    // @TODO: add alert for duplicate sku group
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Mix Editor</h3>
@@ -67,7 +69,10 @@ const GroupEditor: React.FC = () => {
                 <ActiveButtonGroup active={group.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <button type="submit" className="btn btn-sm btn-primary">Save</button>
+                <SpinnerButton type="submit" size="sm" color="primary" spinning={saving}
+                               disabled={saving||loading||!isAdmin}>
+                    Save
+                </SpinnerButton>
             </FormColumn>
             {group.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>

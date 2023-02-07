@@ -1,8 +1,8 @@
 import React, {ChangeEvent} from "react";
-import {Select} from "chums-ducks";
-import {ProductLine} from "../types";
+import {Select} from "chums-components";
 import {useSelector} from "react-redux";
 import {selectProductLineList} from "../ducks/settings";
+import {ProductLine} from "chums-types";
 
 export interface ProductLineSelectProps {
     value: string,

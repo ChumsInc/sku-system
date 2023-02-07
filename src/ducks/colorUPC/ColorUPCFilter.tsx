@@ -1,15 +1,14 @@
 import React, {ChangeEvent} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector} from "react-redux";
 import {
     loadColorUPC,
     loadColorUPCList,
-    searchChanged,
-    selectActiveColorUPCCount,
-    selectColorUPCCount,
-    selectFilterInactive,
-    selectLoading,
+    setSearch,
+    selectShowInactive,
+    selectInactiveCount,
+    selectListLoading,
     selectSearch,
-    toggleFilterInactive
+    toggleShowInactive
 } from "./index";
 import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
@@ -19,21 +18,21 @@ import {defaultColorUPC} from "../../api/colorUPC";
 const ColorUPCFilter: React.FC = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
-    const filterInactive = useSelector(selectFilterInactive);
-    const categoriesCount = useSelector(selectColorUPCCount);
-    const activeCategoriesCount = useSelector(selectActiveColorUPCCount);
-    const loading = useSelector(selectLoading);
+    const showInactive = useSelector(selectShowInactive);
+    const inactive = useSelector(selectInactiveCount);
 
-    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(searchChanged(ev.target.value));
-    const onClickFilterInactive = () => dispatch(toggleFilterInactive());
+    const loading = useSelector(selectListLoading);
+
+    const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
+    const showInactiveToggleHandler = () => dispatch(toggleShowInactive());
     const onClickNew = () => dispatch(loadColorUPC(defaultColorUPC));
     const onClickReload = () => dispatch(loadColorUPCList());
 
     return (
-        <div className="row g-3">
+        <div className="row g-3 align-items-baseline">
             <div className="col-auto">
-                <ShowInactiveCheckbox checked={!filterInactive} onChange={onClickFilterInactive}
-                                      countAll={categoriesCount} countActive={activeCategoriesCount}/>
+                <ShowInactiveCheckbox checked={showInactive} onChange={showInactiveToggleHandler}
+                                      countInactive={inactive}/>
             </div>
             <div className="col-auto">
                 <input type="search" placeholder="Search" value={search} onChange={onChangeSearch}

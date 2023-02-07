@@ -25,6 +25,7 @@ export const initialItemsState = (): ItemsState => ({
     rowsPerPage: getPreference<number>(localStorageKeys.itemsRowsPerPage, 25),
     sort: {...defaultSort},
     assigningUPC: [],
+    showInactive: getPreference(localStorageKeys.itemsShowInactive, false),
 });
 
 export const {
@@ -32,16 +33,86 @@ export const {
     setSearch,
     setPage,
     setRowsPerPage,
-    toggleFilterInactive
+    toggleShowInactive
 } = createDefaultListActions<Product>('items');
+
+export const isActiveItem = (item: Product) => !(item.ProductType === 'D' || item.InactiveItem === 'Y')
+
+export const loadSKUItems = createAsyncThunk<Product[], BaseSKU|null>(
+    'items/load',
+    async (arg) => {
+        return await fetchSKUItems(arg);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !selectLoading(state) && !selectAssigningItems(state).length;
+        }
+    }
+)
+
+
+export const assignNextColorUPCAction = createAsyncThunk<Product, Product>(
+    'items/assignColorUPC',
+    async (arg) => {
+        return postAssignNextColorUPC(arg);
+    },
+    {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            if (!selectIsAdmin(state)) {
+                return false;
+            }
+            if (!isActiveItem(arg) || !!arg.UDF_UPC_BY_COLOR) {
+                return false;
+            }
+            return !selectAssigningItem(state, arg.ItemCode);
+        }
+    }
+)
+
+export const selectItemsList = (state: RootState) => state.items.values;
+
+export const selectItemsCount = (state: RootState) => state.items.values.length;
+export const selectActiveItemsCount = (state: RootState) => state.items.values.filter(item => isActiveItem(item)).length;
+
+export const selectAssigningItem = (state: RootState, itemCode: string): boolean => state.items.assigningUPC.includes(itemCode);
+export const selectAssigningItems = (state: RootState) => state.items.assigningUPC;
+export const selectSearch = (state: RootState) => state.items.search;
+export const selectShowInactive = (state: RootState) => state.items.showInactive;
+export const selectLoading = (state: RootState) => state.items.loading === QueryStatus.pending;
+
+export const selectSort = (state: RootState) => state.items.sort;
+export const selectPage = (state:RootState) => state.items.page;
+export const selectRowsPerPage = (state:RootState) => state.items.rowsPerPage;
+
+
+export const selectFilteredItemList = createSelector(
+    [selectItemsList, selectSearch, selectShowInactive, selectSort],
+    (list, search, showInactive, sort) => {
+        let re = /^/i;
+        try {
+            re = new RegExp(search, 'i');
+        } catch (err) {
+        }
+        return list
+            .filter(item => showInactive || isActiveItem(item))
+            .filter(item => re.test(item.ItemCode) || re.test(item.UDF_UPC || '') || re.test(item.ItemCodeDesc) || re.test(item.UDF_UPC_BY_COLOR || ''))
+            .sort(productSorter(sort));
+
+    }
+)
+
 
 const itemsReducer = createReducer(initialItemsState, (builder) => {
     builder
         .addCase(setSearch, (state, action) => {
             state.search = action.payload;
+            state.page = 0;
         })
-        .addCase(toggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            state.page = 0;
+            setPreference(localStorageKeys.itemsShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
@@ -84,70 +155,5 @@ const itemsReducer = createReducer(initialItemsState, (builder) => {
 });
 
 
-export const isActiveItem = (item: Product) => !(item.ProductType === 'D' || item.InactiveItem === 'Y')
-
-export const loadSKUItems = createAsyncThunk<Product[], BaseSKU|null>(
-    'items/load',
-    async (arg) => {
-        return await fetchSKUItems(arg);
-    }, {
-        condition: (arg, {getState}) => {
-            const state = getState() as RootState;
-            return !!arg?.Category4 && !selectLoading(state) && !selectAssigningItems(state).length;
-        }
-    }
-)
-
-
-export const assignNextColorUPCAction = createAsyncThunk<Product, Product>(
-    'items/assignColorUPC',
-    async (arg) => {
-        return postAssignNextColorUPC(arg);
-    },
-    {
-        condition: (arg, {getState}) => {
-            const state = getState() as RootState;
-            if (!selectIsAdmin(state)) {
-                return false;
-            }
-            if (!isActiveItem(arg) || !!arg.UDF_UPC_BY_COLOR) {
-                return false;
-            }
-            return !selectAssigningItem(state, arg.ItemCode);
-        }
-    }
-)
-
-export const selectItemsList = (state: RootState) => state.items.values;
-
-export const selectItemsCount = (state: RootState) => state.items.values.length;
-export const selectActiveItemsCount = (state: RootState) => state.items.values.filter(item => isActiveItem(item)).length;
-
-export const selectAssigningItem = (state: RootState, itemCode: string): boolean => state.items.assigningUPC.includes(itemCode);
-export const selectAssigningItems = (state: RootState) => state.items.assigningUPC;
-export const selectSearch = (state: RootState) => state.items.search;
-export const selectFilterInactive = (state: RootState) => state.items.filterInactive;
-export const selectLoading = (state: RootState) => state.items.loading === QueryStatus.pending;
-
-export const selectSort = (state: RootState) => state.items.sort;
-export const selectPage = (state:RootState) => state.items.page;
-export const selectRowsPerPage = (state:RootState) => state.items.rowsPerPage;
-
-
-export const selectFilteredItemList = createSelector(
-    [selectItemsList, selectSearch, selectFilterInactive, selectSort],
-    (list, search, filterInactive, sort) => {
-        let re = /^/i;
-        try {
-            re = new RegExp(search, 'i');
-        } catch (err) {
-        }
-        return list
-            .filter(item => !filterInactive || isActiveItem(item))
-            .filter(item => re.test(item.ItemCode) || re.test(item.UDF_UPC || '') || re.test(item.ItemCodeDesc) || re.test(item.UDF_UPC_BY_COLOR || ''))
-            .sort(productSorter(sort));
-
-    }
-)
 
 export default itemsReducer;

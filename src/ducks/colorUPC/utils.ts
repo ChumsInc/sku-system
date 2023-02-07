@@ -1,11 +1,11 @@
-import {ColorUPC} from "../../types";
 import {SortProps} from "chums-components";
+import {ProductColorUPC, ProductColorUPCResponse} from 'chums-types';
 
 
-export const colorUPCKey = (color: ColorUPC) => color.upc;
+export const colorUPCKey = (color: ProductColorUPC) => color.upc;
 
-export const colorUPCSorter = ({field, ascending}: SortProps<ColorUPC>) =>
-    (a: ColorUPC, b: ColorUPC) => {
+export const colorUPCSorter = ({field, ascending}: SortProps<ProductColorUPCResponse>) =>
+    (a: ProductColorUPCResponse, b: ProductColorUPCResponse) => {
         if (field === 'tags') {
             return 0;
         }

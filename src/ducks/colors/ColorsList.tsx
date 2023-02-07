@@ -5,9 +5,11 @@ import {ProductColor} from "chums-types";
 import {
     loadColorsList,
     loadProductColor,
-    selectColorsList,
     selectColorsListLoaded,
     selectCurrentColor,
+    selectFilteredColorsList,
+    selectPage,
+    selectRowsPerPage,
     selectSort,
     setPage,
     setRowsPerPage,
@@ -15,10 +17,8 @@ import {
 } from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
-import {selectPage, selectRowsPerPage} from "../colorUPC";
 import {useAppDispatch} from "../../app/configureStore";
 
-const tableId = 'colors-list';
 
 const fields: SortableTableField<ProductColor>[] = [
     {field: 'code', title: 'Code', sortable: true},
@@ -37,7 +37,7 @@ const rowClassName = (row: ProductColor) => classNames({'table-danger': !row.act
 const ColorsList: React.FC = () => {
     const dispatch = useAppDispatch();
     const sort = useSelector(selectSort);
-    const list = useSelector(selectColorsList);
+    const list = useSelector(selectFilteredColorsList);
     const page = useSelector(selectPage);
     const rowsPerPage = useSelector(selectRowsPerPage);
     const selected = useSelector(selectCurrentColor);
@@ -65,6 +65,7 @@ const ColorsList: React.FC = () => {
                            selected={selected?.id} onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={pageChangeHandler}
                              rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
+                             showFirst showLast bsSize="sm"
                              count={list.length}/>
         </>
     )

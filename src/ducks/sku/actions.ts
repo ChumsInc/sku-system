@@ -1,4 +1,4 @@
-import {selectCurrentSKULoading, selectSKUGroupFilter, selectSKUListLoading, selectSKUSaving} from "./selectors";
+import {selectLoading, selectSKUGroupFilter, selectListLoading, selectSaving} from "./selectors";
 import {selectIsAdmin} from "../users";
 import {createDefaultListActions} from "../redux-utils";
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
@@ -10,7 +10,7 @@ export const {
     setSearch,
     setPage,
     setRowsPerPage,
-    toggleFilterInactive,
+    toggleShowInactive,
     setSort
 } = createDefaultListActions<BaseSKU>('sku/list')
 
@@ -24,7 +24,7 @@ export const loadSKU = createAsyncThunk<BaseSKU | null, BaseSKU>(
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectSKUSaving(state) && !selectCurrentSKULoading(state);
+            return !selectSaving(state) && !selectLoading(state);
         }
     }
 )
@@ -38,7 +38,7 @@ export const loadSKUList = createAsyncThunk<BaseSKU[]>(
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectSKUListLoading(state);
+            return !selectListLoading(state);
         }
     }
 )
@@ -51,7 +51,7 @@ export const saveSKU = createAsyncThunk<BaseSKU, BaseSKU>(
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return selectIsAdmin(state) && !selectSKUSaving(state) && !selectCurrentSKULoading(state);
+            return selectIsAdmin(state) && !selectSaving(state) && !selectLoading(state);
         }
     }
 )

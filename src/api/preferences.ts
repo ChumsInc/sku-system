@@ -16,6 +16,14 @@ export const localStorageKeys = {
     groupsRowsPerPage: `${localStoragePrefix}/categoriesRowsPerPage`,
     mixesRowsPerPage: `${localStoragePrefix}/categoriesRowsPerPage`,
     skuListRowsPerPage: `${localStoragePrefix}/skuListRowsPerPage`,
+
+    categoriesShowInactive: `${localStoragePrefix}/categoriesShowInactive`,
+    colorsShowInactive: `${localStoragePrefix}/colorsShowInactive`,
+    colorUPCShowInactive: `${localStoragePrefix}/colorUPCShowInactive`,
+    itemsShowInactive: `${localStoragePrefix}/itemsShowInactive`,
+    mixesShowInactive: `${localStoragePrefix}/mixesShowInactive`,
+    skuListShowInactive: `${localStoragePrefix}/skuListShowInactive`,
+    groupListShowInactive: `${localStoragePrefix}/groupListShowInactive`,
 }
 
 function getStorage(key:string):Storage {

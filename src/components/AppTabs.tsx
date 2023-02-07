@@ -15,7 +15,7 @@ export const tabPaths = {
     groups: '/groups',
     categories: '/categories',
 }
-export const TAB_SKU_LIST: RoutedTab = {id: 'TAB_SKU_LIST', to: tabPaths.sku, title: 'SKU List'};
+export const TAB_SKU_LIST: RoutedTab = {id: 'TAB_SKU_LIST', to: tabPaths.sku, title: 'Base SKU'};
 export const TAB_UPC_BY_COLOR: RoutedTab = {id: 'TAB_UPC_BY_COLOR', to: tabPaths.byColor, title: 'By Color UPC'};
 export const TAB_COLORS: RoutedTab = {id: 'TAB_COLORS', to: tabPaths.colors, title: 'Colors'};
 export const TAB_MIXES: RoutedTab = {id: 'TAB_MIXES', to: tabPaths.mixes, title: 'Mixes'};
@@ -37,7 +37,7 @@ const AppTabs: React.FC = () => {
     return (
         <TabList className="mb-1">
             {appTabs.map(tab => (
-                <li className="nav-item">
+                <li className="nav-item" key={tab.id}>
                     <NavLink to={tab.to} className="nav-link">
                         {tab.title}
                     </NavLink>

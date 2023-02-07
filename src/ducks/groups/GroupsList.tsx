@@ -61,6 +61,7 @@ const GroupsList: React.FC = () => {
                            rowClassName={rowClassName}
                            selected={selected?.id} onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={onChangePage} rowsPerPage={rowsPerPage}
+                             showFirst showLast bsSize="sm"
                              onChangeRowsPerPage={onChangeRowsPerPage} count={list.length}/>
         </>
     )

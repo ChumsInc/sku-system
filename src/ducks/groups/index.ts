@@ -1,7 +1,7 @@
 import {combineReducers} from "redux";
 import {SortProps} from "chums-components";
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {SKUGroup} from "chums-types";
 import {
     createDefaultListActions,
@@ -15,7 +15,7 @@ import {RootState} from "../../app/configureStore";
 import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
 
-export const defaultSkuGroupSort: SortProps<SKUGroup> = {field: 'id', ascending: true};
+export const defaultSkuGroupSort: SortProps<SKUGroup> = {field: 'code', ascending: true};
 
 export const defaultSKUGroup: SKUGroup = {
     id: 0,
@@ -30,7 +30,8 @@ export const defaultSKUGroup: SKUGroup = {
 export const initialSKUGroupListState = (): ListState<SKUGroup> => ({
     ...initialListState,
     rowsPerPage: getPreference<number>(localStorageKeys.groupsRowsPerPage, 25),
-    sort: {...defaultSkuGroupSort}
+    sort: {...defaultSkuGroupSort},
+    showInactive: getPreference(localStorageKeys.groupListShowInactive, false),
 });
 
 export const initialCurrentSKUGroup: CurrentValueState<SKUGroup> = {
@@ -41,12 +42,12 @@ export const {
     setSearch,
     setPage,
     setRowsPerPage,
-    toggleFilterInactive,
+    toggleShowInactive,
     setSort
 } = createDefaultListActions<SKUGroup>('skuGroup/list');
 
 export const selectSearch = (state: RootState) => state.skuGroups.list.search;
-export const selectFilterInactive = (state: RootState) => state.skuGroups.list.filterInactive;
+export const selectFilterInactive = (state: RootState) => state.skuGroups.list.showInactive;
 export const selectList = (state: RootState): SKUGroup[] => state.skuGroups.list.values;
 export const selectPage = (state: RootState) => state.skuGroups.list.page;
 export const selectRowsPerPage = (state: RootState) => state.skuGroups.list.rowsPerPage;
@@ -68,14 +69,14 @@ export const selectFilteredList = createSelector(
     }
 )
 
-export const selectGroupsCount = (state: RootState) => state.skuGroups.list.values.length;
-export const selectActiveGroupsCount = (state: RootState) => state.skuGroups.list.values.filter(g => g.active).length;
+export const selectInactiveCount = (state: RootState) => state.skuGroups.list.values.filter(g => !g.active).length;
 export const selectCurrentSKUGroup = (state: RootState) => state.skuGroups.current.value;
 export const selectListLoading = (state: RootState) => state.skuGroups.list.loading === QueryStatus.pending;
 export const selectListLoaded = (state: RootState) => state.skuGroups.list.loaded;
 export const selectLoading = (state: RootState) => state.skuGroups.current.loading === QueryStatus.pending;
 export const selectSaving = (state: RootState) => state.skuGroups.current.saving === QueryStatus.pending;
 
+export const setNewSKUGroup = createAction('skuGroup/current/new');
 
 export const loadSKUGroup = createAsyncThunk<SKUGroup | null, SKUGroup>(
     'skuGroup/current/load',
@@ -138,19 +139,24 @@ const skuGroupListReducer = createReducer(initialSKUGroupListState, (builder) =>
     builder
         .addCase(setSearch, (state, action) => {
             state.search = action.payload;
+            state.page = 0;
         })
-        .addCase(toggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
+            state.page = 0;
+            setPreference(localStorageKeys.groupListShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
         })
         .addCase(setRowsPerPage, (state, action) => {
             state.rowsPerPage = action.payload;
+            state.page = 0;
             setPreference<number>(localStorageKeys.groupsRowsPerPage, action.payload);
         })
         .addCase(setSort, (state, action) => {
             state.sort = action.payload;
+            state.page = 0;
         })
         .addCase(loadSKUGroupList.pending, (state, action) => {
             state.loading = QueryStatus.pending;
@@ -205,6 +211,9 @@ const currentSKUGroupReducer = createReducer(initialCurrentSKUGroup, (builder) =
         })
         .addCase(saveSKUGroup.rejected, (state) => {
             state.saving = QueryStatus.rejected;
+        })
+        .addCase(setNewSKUGroup, (state) => {
+            state.value = {...defaultSKUGroup};
         })
 });
 

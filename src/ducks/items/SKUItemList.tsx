@@ -12,7 +12,7 @@ import {
     loadSKUItems,
     selectActiveItemsCount,
     selectFilteredItemList,
-    selectFilterInactive,
+    selectShowInactive,
     selectItemsCount,
     selectLoading,
     selectPage,
@@ -23,7 +23,7 @@ import {
     setRowsPerPage,
     setSearch,
     setSort,
-    toggleFilterInactive
+    toggleShowInactive
 } from "./index";
 import {Alert, SortableTable, SortableTableField, SortProps, SpinnerButton, TablePagination} from "chums-components";
 import {selectCurrentSKU} from "../sku/selectors";
@@ -64,7 +64,7 @@ const tableId = 'sku-item-list';
 function SKUItemList() {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
-    const filterInactive = useSelector(selectFilterInactive);
+    const showInactive = useSelector(selectShowInactive);
     const loading = useSelector(selectLoading)
     const sort = useSelector(selectSort);
     const sku = useSelector(selectCurrentSKU);
@@ -79,7 +79,7 @@ function SKUItemList() {
     }, [sku])
 
     const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
-    const onToggleFilterInactive = (ev: ChangeEvent<HTMLInputElement>) => dispatch(toggleFilterInactive(ev.target.checked));
+    const onToggleShowActive = (ev: ChangeEvent<HTMLInputElement>) => dispatch(toggleShowInactive(ev.target.checked));
     const onClickReload = () => dispatch(loadSKUItems(sku));
 
     const rowClassName = (row: Product) => classNames({
@@ -99,8 +99,8 @@ function SKUItemList() {
                            onChange={onChangeFilter} className="form-control form-control-sm"/>
                 </div>
                 <div className="col-auto">
-                    <ShowInactiveCheckbox checked={!filterInactive} onChange={onToggleFilterInactive}
-                                          countAll={listLength} countActive={itemActiveCount}/>
+                    <ShowInactiveCheckbox checked={showInactive} onChange={onToggleShowActive}
+                                          countInactive={listLength - itemActiveCount}/>
                 </div>
                 <div className="col-auto">
                     <SpinnerButton spinning={loading} size="sm" color="primary"
@@ -116,6 +116,7 @@ function SKUItemList() {
             {!!sku?.id && !loading && !listLength && <Alert color="warning">No Items</Alert>}
             <TablePagination page={page} onChangePage={pageChangeHandler}
                              rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
+                             showFirst showLast bsSize="sm"
                              count={list.length}/>
         </div>
     )

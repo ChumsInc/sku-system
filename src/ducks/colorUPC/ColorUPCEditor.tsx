@@ -1,10 +1,10 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useState} from 'react';
+import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {loadColorUPC, saveColorUPC, selectColorUPC, selectSaving} from "./index";
+import {loadColorUPC, saveColorUPC, selectCurrentColorUPC, selectLoading, selectSaving} from "./index";
 import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import CompanySelect from "../../components/CompanySelect";
@@ -18,9 +18,14 @@ import {defaultColorUPC} from "../../api/colorUPC";
 const ColorUPCEditor: React.FC = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
-    const selected = useSelector(selectColorUPC);
-    const isSaving = useSelector(selectSaving);
+    const selected = useSelector(selectCurrentColorUPC);
+    const saving = useSelector(selectSaving);
+    const loading = useSelector(selectLoading);
     const [colorUPC, setColorUPC] = useState<ProductColorUPCResponse & Editable>(selected ?? {...defaultColorUPC});
+
+    useEffect(() => {
+        setColorUPC({...(selected ?? defaultColorUPC)})
+    }, [selected]);
 
     const onChangeItem = (ev: ChangeEvent<HTMLInputElement>) => {
         setColorUPC({...colorUPC, ItemCode: ev.target.value, changed: true});
@@ -48,6 +53,7 @@ const ColorUPCEditor: React.FC = () => {
 
     const onClickNew = () => dispatch(loadColorUPC(defaultColorUPC));
 
+    // @TODO: add alert for duplicate color UPC
     return (
         <div>
             <form className="form-horizontal" onSubmit={onSubmit}>
@@ -84,17 +90,10 @@ const ColorUPCEditor: React.FC = () => {
                     <ActiveButtonGroup active={colorUPC.active} onChange={onChangeActive} disabled={!isAdmin}/>
                 </FormColumn>
                 <FormColumn label="">
-                    <div className="row g-3">
-                        <div className="col-auto">
-                            <SpinnerButton type="submit" className="btn btn-sm btn-primary"
-                                           spinning={isSaving}>Save</SpinnerButton>
-                        </div>
-                        <div className="col-auto">
-                            <button type="button" className="btn btn-sm btn-outline-secondary"
-                                    onClick={onClickNew}>New
-                            </button>
-                        </div>
-                    </div>
+                    <SpinnerButton type="submit" className="btn btn-sm btn-primary"
+                                   spinning={saving} disabled={saving || loading || !isAdmin}>
+                        Save
+                    </SpinnerButton>
                 </FormColumn>
                 {colorUPC.changed && (
                     <Alert color="warning">Don't forget to save your changes</Alert>

@@ -1,49 +1,56 @@
-import React, {useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import React from "react";
+import {useSelector} from "react-redux";
+import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
 import {
-    addPageSetAction,
-    PagerDuck,
-    selectPagedData,
-    selectTableSort,
-    SortableTable,
-    tableAddedAction
-} from "chums-ducks";
-import {ProductColor, ProductMixTableField} from "../../types";
-import {fetchMixAction, selectMix, selectMixesCount, selectMixesList} from "./index";
+    loadMix,
+    selectCurrentMix,
+    selectFilteredMixesList,
+    selectPage,
+    selectRowsPerPage,
+    selectSort,
+    setPage,
+    setRowsPerPage,
+    setSort
+} from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
+import {ProductMixInfo} from "chums-types";
+import {useAppDispatch} from "../../app/configureStore";
 
 const tableId = 'mixes-list';
 
-const fields: ProductMixTableField[] = [
+const fields: SortableTableField<ProductMixInfo>[] = [
     {field: 'code', title: 'Code', sortable: true},
     {field: 'description', title: 'Description', sortable: true},
-    {field: 'notes', title: 'Notes', sortable: true, render: ({notes}) => (<TrimmedText text={notes} length={65}/>)}
+    {field: 'notes', title: 'Notes', sortable: true, render: (row) => (<TrimmedText text={row.notes ?? ''} length={65}/>)}
 ]
 
-const rowClassName = (row: ProductColor) => classNames({'table-danger': !row.active});
+const rowClassName = (row: ProductMixInfo) => classNames({'text-danger': !row.active});
 
 const MixesList: React.FC = () => {
-    const dispatch = useDispatch();
-    const sort = useSelector(selectTableSort(tableId));
-    const list = useSelector(selectMixesList(sort));
-    const listLength = useSelector(selectMixesCount);
-    const pagedList = useSelector(selectPagedData(tableId, list));
-    const selected = useSelector(selectMix);
+    const dispatch = useAppDispatch();
+    const sort = useSelector(selectSort);
+    const page = useSelector(selectPage);
+    const rowsPerPage = useSelector(selectRowsPerPage);
+    const list = useSelector(selectFilteredMixesList);
+    const selected = useSelector(selectCurrentMix);
 
-    const onSelectRow = (row: ProductColor) => dispatch(fetchMixAction(row));
-
-    useEffect(() => {
-        dispatch(tableAddedAction({key: tableId, field: 'ItemCode', ascending: true}));
-        dispatch(addPageSetAction({key: tableId}));
-    }, []);
+    const onSelectRow = (row: ProductMixInfo) => dispatch(loadMix(row.id));
+    const onChangePage = (page: number) => dispatch(setPage(page));
+    const onChangeRowsPerPage = (rpp: number) => dispatch(setRowsPerPage(rpp));
+    const sortChangedHandler = (sort: SortProps<ProductMixInfo>) => dispatch(setSort(sort));
 
     return (
         <>
-            <SortableTable tableKey={tableId} keyField="id" fields={fields} data={pagedList} size="xs"
+            <SortableTable keyField="id" fields={fields}
+                           data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
+                           onChangeSort={sortChangedHandler} currentSort={sort}
+                           size="xs"
                            rowClassName={rowClassName}
-                           selected={selected.id} onSelectRow={onSelectRow}/>
-            <PagerDuck dataLength={list.length} filtered={list.length !== listLength} pageKey={tableId}/>
+                           selected={selected?.id} onSelectRow={onSelectRow}/>
+            <TablePagination page={page} onChangePage={onChangePage} rowsPerPage={rowsPerPage}
+                             showFirst showLast bsSize="sm"
+                             onChangeRowsPerPage={onChangeRowsPerPage} count={list.length}/>
         </>
     )
 }

@@ -1,49 +1,41 @@
 import {colorUPCSorter} from "./utils";
 import {QueryStatus} from "@reduxjs/toolkit/query";
 import {SortProps} from "chums-components";
-import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
+import {combineReducers, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {fetchColorUPC, fetchColorUPCList, postColorUPC} from "../../api/colorUPC";
 import {RootState} from "../../app/configureStore";
 import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
 import {ProductColorUPCResponse} from "chums-types";
+import {
+    createDefaultListActions,
+    CurrentValueState,
+    initialCurrentValueState,
+    initialListState,
+    ListState
+} from "../redux-utils";
 
 
-export const defaultColorUPCSort: SortProps<ProductColorUPCResponse> = {field: "id", ascending: true}
+export const defaultColorUPCSort: SortProps<ProductColorUPCResponse> = {field: "ItemCode", ascending: true}
 
-export interface ColorUPCState {
-    list: ProductColorUPCResponse[],
-    search: string;
-    filterInactive: boolean;
-    loading: QueryStatus;
-    selected: ProductColorUPCResponse | null;
-    selectedLoading: QueryStatus;
-    saving: QueryStatus;
-    page: number;
-    rowsPerPage: number;
-    sort: SortProps<ProductColorUPCResponse>,
+const initialColorUPClListState = (): ListState<ProductColorUPCResponse> => ({
+    ...initialListState,
+    rowsPerPage: getPreference(localStorageKeys.colorUPCRowsPerPage, 25),
+    showInactive: getPreference(localStorageKeys.colorUPCShowInactive, false),
+    sort: defaultColorUPCSort,
+})
+
+const initialCurrentColorUPCState: CurrentValueState<ProductColorUPCResponse> = {
+    ...initialCurrentValueState,
 }
 
-export const initialColorUPCState: ColorUPCState = {
-    list: [],
-    search: '',
-    filterInactive: true,
-    loading: QueryStatus.uninitialized,
-    selected: null,
-    selectedLoading: QueryStatus.uninitialized,
-    saving: QueryStatus.uninitialized,
-    page: 0,
-    rowsPerPage: getPreference<number>(localStorageKeys.colorUPCRowsPerPage, 25),
-    sort: {...defaultColorUPCSort},
-}
-
-export const searchChanged = createAction<string>('colorUPC/searchChanged');
-export const toggleFilterInactive = createAction<boolean | undefined>('colorUPC/toggleFilterInactive');
-
-export const setPage = createAction<number>('colorUPC/setPage');
-export const setRowsPerPage = createAction<number>('colorUPC/setRowsPerPage');
-
-export const setSort = createAction<SortProps<ProductColorUPCResponse>>('colorUPC/setSort');
+export const {
+    setSearch,
+    setPage,
+    setRowsPerPage,
+    toggleShowInactive,
+    setSort
+} = createDefaultListActions<ProductColorUPCResponse>('colorUPC/list');
 
 
 export const loadColorUPC = createAsyncThunk<ProductColorUPCResponse | null, ProductColorUPCResponse>(
@@ -66,7 +58,7 @@ export const loadColorUPCList = createAsyncThunk<ProductColorUPCResponse[]>(
     {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectLoading(state);
+            return !selectListLoading(state);
         }
     }
 )
@@ -84,31 +76,30 @@ export const saveColorUPC = createAsyncThunk<ProductColorUPCResponse, ProductCol
     }
 )
 
-export const selectList = (state: RootState) => state.colorUPC.list;
-export const selectColorUPCCount = (state: RootState) => state.colorUPC.list.length;
-export const selectActiveColorUPCCount = (state: RootState) => state.colorUPC.list.filter(item => item.active).length;
-export const selectSearch = (state: RootState) => state.colorUPC.search;
-export const selectFilterInactive = (state: RootState) => state.colorUPC.filterInactive;
-export const selectLoading = (state: RootState) => state.colorUPC.loading === QueryStatus.pending;
-export const selectColorUPC = (state: RootState) => state.colorUPC.selected;
-export const selectColorUPCLoading = (state: RootState) => state.colorUPC.selectedLoading === QueryStatus.pending;
-export const selectSaving = (state: RootState) => state.colorUPC.saving === QueryStatus.pending;
-export const selectSort = (state: RootState) => state.colorUPC.sort;
+export const selectList = (state: RootState) => state.colorUPC.list.values;
+export const selectInactiveCount = (state: RootState) => state.colorUPC.list.values.filter(item => !item.active).length;
+export const selectSearch = (state: RootState) => state.colorUPC.list.search;
+export const selectShowInactive = (state: RootState) => state.colorUPC.list.showInactive;
+export const selectListLoading = (state: RootState) => state.colorUPC.list.loading === QueryStatus.pending;
+export const selectCurrentColorUPC = (state: RootState) => state.colorUPC.current.value;
+export const selectLoading = (state: RootState) => state.colorUPC.current.loading === QueryStatus.pending;
+export const selectSaving = (state: RootState) => state.colorUPC.current.saving === QueryStatus.pending;
+export const selectSort = (state: RootState) => state.colorUPC.list.sort;
 
-export const selectPage = (state: RootState) => state.colorUPC.page;
+export const selectPage = (state: RootState) => state.colorUPC.list.page;
 
-export const selectRowsPerPage = (state: RootState) => state.colorUPC.rowsPerPage;
+export const selectRowsPerPage = (state: RootState) => state.colorUPC.list.rowsPerPage;
 
 export const selectColorUPCList = createSelector(
-    [selectList, selectSearch, selectFilterInactive, selectSort],
-    (list, search, filterInactive, sort) => {
+    [selectList, selectSearch, selectShowInactive, selectSort],
+    (list, search, showInactive, sort) => {
         let re = /^/i;
         try {
             re = new RegExp(search, 'i');
         } catch (err) {
         }
         return list
-            .filter(upc => !filterInactive || upc.active)
+            .filter(upc => showInactive || upc.active)
             .filter(upc => re.test(upc.ItemCode)
                 || re.test(upc.ItemCodeDesc || '')
                 || re.test(upc.notes || '')
@@ -118,14 +109,13 @@ export const selectColorUPCList = createSelector(
     }
 )
 
-
-const colorUPCReducer = createReducer(initialColorUPCState, (builder) => {
+const listReducer = createReducer(initialColorUPClListState, (builder) => {
     builder
-        .addCase(searchChanged, (state, action) => {
+        .addCase(setSearch, (state, action) => {
             state.search = action.payload;
         })
-        .addCase(toggleFilterInactive, (state, action) => {
-            state.filterInactive = action.payload ?? !state.filterInactive;
+        .addCase(toggleShowInactive, (state, action) => {
+            state.showInactive = action.payload ?? !state.showInactive;
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
@@ -143,45 +133,54 @@ const colorUPCReducer = createReducer(initialColorUPCState, (builder) => {
         })
         .addCase(loadColorUPCList.fulfilled, (state, action) => {
             state.loading = QueryStatus.fulfilled;
-            state.list = action.payload.sort(colorUPCSorter(defaultColorUPCSort));
+            state.values = action.payload.sort(colorUPCSorter(defaultColorUPCSort));
         })
         .addCase(loadColorUPCList.rejected, (state, action) => {
             state.loading = QueryStatus.rejected;
         })
-        .addCase(loadColorUPC.pending, (state, action) => {
-            state.selectedLoading = QueryStatus.pending;
-        })
         .addCase(loadColorUPC.fulfilled, (state, action) => {
-            state.selected = action.payload;
-            state.selectedLoading = QueryStatus.fulfilled;
-
             if (action.payload && action.payload.id) {
-                state.list = [
-                    ...state.list = state.list.filter(row => row.id !== action.meta.arg.id),
+                state.values = [
+                    ...state.values.filter(row => row.id !== action.meta.arg.id),
                     action.payload
                 ].sort(colorUPCSorter(defaultColorUPCSort));
             }
         })
+        .addCase(saveColorUPC.fulfilled, (state, action) => {
+            state.values = [
+                ...state.values.filter(row => row.id !== action.meta.arg.id),
+                action.payload
+            ].sort(colorUPCSorter(defaultColorUPCSort));
+        })
+
+});
+
+const currentReducer = createReducer(initialCurrentColorUPCState, (builder) => {
+    builder
+        .addCase(loadColorUPC.pending, (state, action) => {
+            state.loading = QueryStatus.pending;
+        })
+        .addCase(loadColorUPC.fulfilled, (state, action) => {
+            state.value = action.payload;
+            state.loading = QueryStatus.fulfilled;
+        })
         .addCase(loadColorUPC.rejected, (state) => {
-            state.selectedLoading = QueryStatus.rejected;
+            state.loading = QueryStatus.rejected;
         })
         .addCase(saveColorUPC.pending, (state, action) => {
             state.saving = QueryStatus.pending;
         })
         .addCase(saveColorUPC.fulfilled, (state, action) => {
-            state.selected = action.payload;
+            state.value = action.payload;
             state.saving = QueryStatus.fulfilled;
-
-            if (action.payload) {
-                state.list = [
-                    ...state.list = state.list.filter(row => row.id !== action.meta.arg.id),
-                    action.payload
-                ].sort(colorUPCSorter(defaultColorUPCSort));
-            }
         })
         .addCase(saveColorUPC.rejected, (state) => {
             state.saving = QueryStatus.rejected;
         })
 });
 
+const colorUPCReducer = combineReducers({
+    list: listReducer,
+    current: currentReducer,
+});
 export default colorUPCReducer;

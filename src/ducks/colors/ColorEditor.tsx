@@ -1,11 +1,11 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useState} from 'react';
+import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {saveProductColor, selectCurrentColor} from "./index";
-import {Alert, FormColumn} from "chums-components";
+import {saveProductColor, selectCurrentColor, selectLoading, selectSaving} from "./index";
+import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import {defaultProductColor} from "../../api/color";
 import {Editable, ProductColor} from "chums-types";
@@ -16,8 +16,13 @@ const ColorEditor: React.FC = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentColor);
-
+    const saving = useSelector(selectSaving);
+    const loading = useSelector(selectLoading);
     const [color, setColor] = useState<ProductColor & Editable>(selected ?? {...defaultProductColor})
+
+    useEffect(() => {
+        setColor({...(selected ?? defaultProductColor)});
+    }, [selected])
 
     const onChangeCode = (ev: ChangeEvent<HTMLInputElement>) => {
         setColor({...color, code: ev.target.value.toUpperCase(), changed: true});
@@ -36,6 +41,7 @@ const ColorEditor: React.FC = () => {
         dispatch(saveProductColor(color));
     }
 
+    // @TODO: add alert for duplicate color code
     return (
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Color Editor</h3>
@@ -59,7 +65,10 @@ const ColorEditor: React.FC = () => {
                 <ActiveButtonGroup active={color.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <button type="submit" className="btn btn-sm btn-primary">Save</button>
+                <SpinnerButton type="submit"
+                               color="primary" size="sm" spinning={saving} disabled={loading || !isAdmin}>
+                    Save
+                </SpinnerButton>
             </FormColumn>
             {color.changed && (
                 <Alert color="warning">Don't forget to save your changes</Alert>

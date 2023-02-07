@@ -33,7 +33,7 @@
 			<label for="years">Years of Detail</label>
 			<select id="years">
 			<?php for ($i = 2; $i < 10; $i++) {
-				$selected = ($i == 3 ? 'selected="selected"' : '');
+				$selected = ($i == 3 ? 'current="current"' : '');
 				echo "<option value=\"{$i}\" {$selected}>{$i}</option>";
 			} ?>
 			</select>

@@ -23,7 +23,7 @@ $ui->addManifest('public/js/manifest.json');
 //$ui->addChunkManifest('public/js/chunk-manifest.json');
 /**
  * Changelog:
- * selected now stays on top of list
+ * current now stays on top of list
  * only users with inventory_admin group can edit.
  *
  * 4/13/2017

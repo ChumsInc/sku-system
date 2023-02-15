@@ -5,10 +5,10 @@ import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {defaultSKUGroup, saveSKUGroup, selectCurrentSKUGroup, selectLoading, selectSaving} from "./index";
-import {Alert, FormColumn, Spinner, SpinnerButton} from "chums-components";
+import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
-import TextArea from 'react-textarea-autosize';
+import {TextareaAutosize} from '@mui/base'
 import {Editable, SKUGroup} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
 
@@ -62,15 +62,15 @@ const GroupEditor: React.FC = () => {
             </FormColumn>
 
             <FormColumn label="Notes">
-                <TextArea readOnly={!isAdmin} value={group.notes || ''} onChange={onChange('notes')}
-                          className="form-control form-control-sm"/>
+                <TextareaAutosize readOnly={!isAdmin} value={group.notes || ''} onChange={onChange('notes')}
+                                  className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">
                 <ActiveButtonGroup active={group.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
                 <SpinnerButton type="submit" size="sm" color="primary" spinning={saving}
-                               disabled={saving||loading||!isAdmin}>
+                               disabled={saving || loading || !isAdmin}>
                     Save
                 </SpinnerButton>
             </FormColumn>

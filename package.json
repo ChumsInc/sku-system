@@ -9,20 +9,17 @@
   },
   "dependencies": {
     "@chumsinc/gtin-tools": "^1.0.3",
+    "@mui/base": "^5.0.0-alpha.118",
     "@reduxjs/toolkit": "^1.9.2",
     "auto-changelog": "^2.4.0",
     "chums-components": "github:UtahGooner/chums-components",
     "chums-types": "github:UtahGooner/chums-types",
     "classnames": "^2.2.6",
-    "numeral": "^2.0.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-markdown": "^8.0.5",
     "react-redux": "^8.0.5",
     "react-router-dom": "^6.8.0",
-    "react-textarea-autosize": "^8.3.3",
-    "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0"
+    "redux": "^4.0.4"
   },
   "devDependencies": {
     "@babel/core": "^7.5.5",

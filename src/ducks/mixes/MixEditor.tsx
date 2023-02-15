@@ -7,7 +7,7 @@ import {selectIsAdmin} from "../users";
 import {saveMix, selectCurrentMix, selectMixLoading, selectMixSaving} from "./index";
 import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
-import TextArea from 'react-textarea-autosize';
+import {TextareaAutosize} from '@mui/base'
 import {useAppDispatch} from "../../app/configureStore";
 import {Editable, ProductMixInfo} from "chums-types";
 import {emptyMix} from "../../api/mixes";
@@ -59,7 +59,7 @@ const MixEditor: React.FC = () => {
                        onChange={onChange('description')}/>
             </FormColumn>
             <FormColumn label="Notes">
-                <TextArea readOnly={!isAdmin} value={mix.notes || ''} onChange={onChange('notes')}
+                <TextareaAutosize readOnly={!isAdmin} value={mix.notes || ''} onChange={onChange('notes')}
                           className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">

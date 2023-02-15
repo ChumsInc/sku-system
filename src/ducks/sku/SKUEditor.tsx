@@ -8,7 +8,7 @@ import {removeSKU, saveSKU} from "./actions";
 import {selectIsAdmin} from "../users";
 import {FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
-import TextArea from 'react-textarea-autosize';
+import {TextareaAutosize} from '@mui/base';
 import SKUGroupSelect from "../groups/SKUGroupSelect";
 import {BaseSKU, Editable, SKUGroup} from "chums-types";
 import {defaultBaseSKU} from "../../api/sku";
@@ -93,8 +93,8 @@ const SKUEditor: React.FC = () => {
                     </datalist>
                 </FormColumn>
                 <FormColumn label="Notes">
-                    <TextArea className="form-control form-control-sm" minRows={3}
-                              readOnly={!isAdmin} onChange={onChangeNotes} value={baseSKU.notes || ''}/>
+                    <TextareaAutosize className="form-control form-control-sm" minRows={3}
+                                      readOnly={!isAdmin} onChange={onChangeNotes} value={baseSKU.notes || ''}/>
                 </FormColumn>
                 <FormColumn label="Active">
                     <ActiveButtonGroup active={baseSKU.active ?? true} onChange={onChangeActive} disabled={!isAdmin}/>

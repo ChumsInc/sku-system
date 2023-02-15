@@ -4,11 +4,11 @@
 import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
-import {loadColorUPC, saveColorUPC, selectCurrentColorUPC, selectLoading, selectSaving} from "./index";
+import {saveColorUPC, selectCurrentColorUPC, selectLoading, selectSaving} from "./index";
 import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import CompanySelect from "../../components/CompanySelect";
-import TextArea from 'react-textarea-autosize';
+import {TextareaAutosize} from '@mui/base';
 import {Editable, ProductColorUPCResponse} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
 import {formatGTIN} from '@chumsinc/gtin-tools';
@@ -51,8 +51,6 @@ const ColorUPCEditor: React.FC = () => {
         dispatch(saveColorUPC({...colorUPC, upc}));
     }
 
-    const onClickNew = () => dispatch(loadColorUPC(defaultColorUPC));
-
     // @TODO: add alert for duplicate color UPC
     return (
         <div>
@@ -82,9 +80,10 @@ const ColorUPCEditor: React.FC = () => {
                     <small className="text-muted">Leave blank to assign the next by-color UPC.</small>
                 </FormColumn>
                 <FormColumn label="Notes">
-                    <TextArea readOnly={!isAdmin} value={colorUPC.notes || ''} onChange={onChange('notes')}
-                              minRows={3}
-                              className="form-control form-control-sm"/>
+                    <TextareaAutosize
+                        readOnly={!isAdmin} value={colorUPC.notes || ''} onChange={onChange('notes')}
+                        minRows={3}
+                        className="form-control form-control-sm"/>
                 </FormColumn>
                 <FormColumn label="Active">
                     <ActiveButtonGroup active={colorUPC.active} onChange={onChangeActive} disabled={!isAdmin}/>

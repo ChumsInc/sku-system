@@ -4,8 +4,8 @@ import {SortableTable, SortableTableField, SortProps, TablePagination} from "chu
 import {
     loadColorUPC,
     loadColorUPCList,
-    selectCurrentColorUPC,
     selectColorUPCList,
+    selectCurrentColorUPC,
     selectPage,
     selectRowsPerPage,
     selectSort,
@@ -17,8 +17,7 @@ import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
 import GTIN from "../../GTIN";
 import {useAppDispatch} from "../../app/configureStore";
-import {ProductColorUPC} from "chums-types";
-import {ProductColorUPCResponse} from "chums-types/products";
+import {ProductColorUPC, ProductColorUPCResponse} from "chums-types";
 
 const tableFields: SortableTableField<ProductColorUPCResponse>[] = [
     {field: 'company', title: 'Company', sortable: true},

@@ -10,7 +10,6 @@ import CategoriesTab from "../ducks/categories/CategoriesTab";
 import ColorUPCTab from "../ducks/colorUPC/ColorUPCTab";
 import {useAppDispatch} from "./configureStore";
 import {ErrorBoundary} from "chums-components";
-import AlertList from "../ducks/alerts/AlertList";
 import AppContent from "./AppContent";
 import IndexRedirect from "./IndexRedirect";
 
@@ -28,7 +27,7 @@ const App = () => {
         <ErrorBoundary>
             <Routes>
                 <Route path="/" element={<AppContent/>}>
-                    <Route index element={<IndexRedirect />} />
+                    <Route index element={<IndexRedirect/>}/>
                     <Route path="/sku" element={<SKUSystemTab/>}/>
                     <Route path="/by-color" element={<ColorUPCTab/>}/>
                     <Route path="/colors" element={<ColorsTab/>}/>

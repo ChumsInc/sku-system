@@ -8,10 +8,10 @@ import {
     ProductLine,
     ProductMixInfo,
     ProductSeason,
-    ProductStatus, SKUGroup
+    ProductStatus,
+    SKUGroup,
+    Warehouse
 } from "chums-types";
-import {Warehouse} from "chums-types/products";
-
 
 
 export interface Product {

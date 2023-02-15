@@ -11,6 +11,7 @@ import skuReducer from "../ducks/sku";
 import itemsReducer from "../ducks/items";
 import settingsReducer from "../ducks/settings";
 import mixesReducer from "../ducks/mixes";
+import versionReducer from "../ducks/version";
 
 
 const rootReducer = combineReducers({
@@ -27,6 +28,7 @@ const rootReducer = combineReducers({
     // sortableTables: sortableTablesReducer,
     // tabs: tabsReducer,
     user: userReducer,
+    version: versionReducer,
 })
 
 const store = configureStore({

@@ -5,6 +5,7 @@ import SKUFilter from "./SKUFilter";
 import {selectSKUGroupFilter} from "./selectors";
 import SKUEditor from "./SKUEditor";
 import SKUItemList from "../items/SKUItemList";
+import Version from "../version/Version";
 
 const SKUSystemTab: React.FC = () => {
     const selectedGroup = useSelector(selectSKUGroupFilter);
@@ -18,6 +19,7 @@ const SKUSystemTab: React.FC = () => {
                 </div>
                 <div className="col-sm-3">
                     <SKUEditor />
+                    <Version />
                 </div>
                 <div className="col-sm-5">
                     <SKUItemList/>

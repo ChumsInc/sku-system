@@ -5,6 +5,7 @@ import {createReducer} from "@reduxjs/toolkit";
 import {
     loadSKU,
     loadSKUList,
+    removeSKU,
     saveSKU,
     setPage,
     setRowsPerPage,
@@ -61,25 +62,28 @@ const skuListReducer = createReducer(initialSKUListState, (builder) => {
             state.loading = QueryStatus.fulfilled;
             state.values = action.payload.sort(productSKUSorter(defaultSort));
         })
-        .addCase(loadSKUList.rejected, (state, action) => {
+        .addCase(loadSKUList.rejected, (state) => {
             state.loading = QueryStatus.rejected
         })
         .addCase(setSKUGroupFilter, (state, action) => {
             state.skuGroup = action.payload ?? null;
         })
         .addCase(loadSKU.fulfilled, (state, action) => {
-            if (action.payload) {
+            if (action.payload && !!action.payload.id) {
                 state.values = [
                     ...state.values.filter(row => row.id !== action.payload?.id),
                     action.payload,
-                ]
+                ].sort(productSKUSorter(defaultSort))
             }
         })
         .addCase(saveSKU.fulfilled, (state, action) => {
             state.values = [
                 ...state.values.filter(row => row.id !== action.payload.id),
                 action.payload,
-            ];
+            ].sort(productSKUSorter(defaultSort));
+        })
+        .addCase(removeSKU.fulfilled, (state, action) => {
+            state.values = action.payload.sort(productSKUSorter(defaultSort))
         })
 });
 
@@ -111,6 +115,16 @@ const currentSKUReducer = createReducer(initialCurrentSKUState, (builder) => {
             state.value = action.payload;
         })
         .addCase(saveSKU.rejected, (state) => {
+            state.saving = QueryStatus.rejected;
+        })
+        .addCase(removeSKU.pending, (state) => {
+            state.saving = QueryStatus.pending;
+        })
+        .addCase(removeSKU.fulfilled, (state) => {
+            state.saving = QueryStatus.fulfilled;
+            state.value = null;
+        })
+        .addCase(removeSKU.rejected, (state) => {
             state.saving = QueryStatus.rejected;
         })
 });

@@ -4,7 +4,7 @@
 import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectCurrentSKU, selectLoading, selectSaving} from "./selectors";
-import {saveSKU} from "./actions";
+import {removeSKU, saveSKU} from "./actions";
 import {selectIsAdmin} from "../users";
 import {FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
@@ -55,6 +55,13 @@ const SKUEditor: React.FC = () => {
         dispatch(saveSKU(baseSKU));
     }
 
+    const deleteSKUHandler = () => {
+        if (!isAdmin) {
+            return;
+        }
+        dispatch(removeSKU(baseSKU));
+    }
+
     // @TODO: add alert for duplicate base sku
     return (
         <>
@@ -93,10 +100,22 @@ const SKUEditor: React.FC = () => {
                     <ActiveButtonGroup active={baseSKU.active ?? true} onChange={onChangeActive} disabled={!isAdmin}/>
                 </FormColumn>
                 <FormColumn label="" className="mb-3">
-                    <SpinnerButton type="submit" disabled={!isAdmin || loading} className="btn btn-sm btn-primary"
-                                   spinning={saving}>
-                        Save
-                    </SpinnerButton>
+                    <div className="row g-3">
+                        <div className="col-auto">
+                            <SpinnerButton type="submit" color="primary" size="sm"
+                                           disabled={!isAdmin || loading || !baseSKU.sku_group_id || !baseSKU.sku}
+                                           spinning={saving}>
+                                Save
+                            </SpinnerButton>
+                        </div>
+                        <div className="col-auto">
+                            <button className="btn btn-sm btn-outline-danger" type="button"
+                                    disabled={!isAdmin || loading || !baseSKU.id || baseSKU.changed}
+                                    onClick={deleteSKUHandler}>
+                                Delete SKU
+                            </button>
+                        </div>
+                    </div>
                 </FormColumn>
             </form>
 

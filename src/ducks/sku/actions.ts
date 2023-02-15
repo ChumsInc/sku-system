@@ -3,7 +3,7 @@ import {selectIsAdmin} from "../users";
 import {createDefaultListActions} from "../redux-utils";
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
 import {BaseSKU, SKUGroup} from "chums-types";
-import {fetchSKU, fetchSKUList, postSKU} from "../../api/sku";
+import {deleteSKU, fetchSKU, fetchSKUList, postSKU} from "../../api/sku";
 import {RootState} from "../../app/configureStore";
 
 export const {
@@ -52,6 +52,20 @@ export const saveSKU = createAsyncThunk<BaseSKU, BaseSKU>(
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
             return selectIsAdmin(state) && !selectSaving(state) && !selectLoading(state);
+        }
+    }
+)
+
+export const removeSKU = createAsyncThunk<BaseSKU[], BaseSKU>(
+    'sku/current/delete',
+    async (arg, {getState}) => {
+        const state = getState() as RootState;
+        const group = selectSKUGroupFilter(state);
+        return await deleteSKU(arg, group?.id ?? null);
+    }, {
+        condition: (arg, {getState}) => {
+            const state = getState() as RootState;
+            return !!arg.id && selectIsAdmin(state) && !selectSaving(state) && !selectLoading(state);
         }
     }
 )

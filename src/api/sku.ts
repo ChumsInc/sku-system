@@ -59,3 +59,18 @@ export async function postSKU(arg: BaseSKU): Promise<BaseSKU> {
         return Promise.reject(new Error('Error in postSKU()'));
     }
 }
+
+export async function deleteSKU(arg:BaseSKU, groupId: number|null):Promise<BaseSKU[]> {
+    try {
+        const url = `/api/operations/sku/base/${encodeURIComponent(arg.id)}/${encodeURIComponent(arg.sku)}`;
+        await fetchJSON(url, {method: 'DELETE'});
+        return await fetchSKUList(groupId);
+    } catch(err:unknown) {
+        if (err instanceof Error) {
+            console.debug("deleteSKU()", err.message);
+            return Promise.reject(err);
+        }
+        console.debug("deleteSKU()", err);
+        return Promise.reject(new Error('Error in deleteSKU()'));
+    }
+}

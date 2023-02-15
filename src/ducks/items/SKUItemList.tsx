@@ -3,7 +3,6 @@
  */
 
 import React, {ChangeEvent, useEffect} from 'react';
-import GTIN from '../../GTIN';
 import {useSelector} from 'react-redux';
 import TrimmedText from "../../components/TrimmedText";
 import {Product} from "../../types";
@@ -12,12 +11,12 @@ import {
     loadSKUItems,
     selectActiveItemsCount,
     selectFilteredItemList,
-    selectShowInactive,
     selectItemsCount,
     selectLoading,
     selectPage,
     selectRowsPerPage,
     selectSearch,
+    selectShowInactive,
     selectSort,
     setPage,
     setRowsPerPage,
@@ -59,7 +58,6 @@ const tableFields: SortableTableField<Product>[] = [
 
 ];
 
-const tableId = 'sku-item-list';
 
 function SKUItemList() {
     const dispatch = useAppDispatch();
@@ -75,7 +73,9 @@ function SKUItemList() {
     const itemActiveCount = useSelector(selectActiveItemsCount);
 
     useEffect(() => {
-        dispatch(loadSKUItems(sku));
+        if (sku && sku.sku) {
+            dispatch(loadSKUItems(sku));
+        }
     }, [sku])
 
     const onChangeFilter = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));

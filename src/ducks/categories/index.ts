@@ -61,7 +61,6 @@ export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCate
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            console.log(state, selectListLoading(state), selectLoading(state));
             return !selectListLoading(state) && !selectLoading(state);
         }
     }

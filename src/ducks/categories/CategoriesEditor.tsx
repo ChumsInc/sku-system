@@ -56,9 +56,12 @@ const CategoriesEditor: React.FC = () => {
         <form className="form-horizontal" onSubmit={onSubmit}>
             <h3>Category Editor</h3>
             <FormColumn label="Code">
-                <input type="text" readOnly={!isAdmin} value={category.code}
-                       className="form-control form-control-sm" minLength={2} maxLength={10}
-                       onChange={onChangeCode}/>
+                <div className="input-group input-group-sm">
+                    <div className="input-group-text">{category.id ?? 'NEW'}</div>
+                    <input type="text" readOnly={!isAdmin} value={category.code}
+                           className="form-control form-control-sm" minLength={2} maxLength={10}
+                           onChange={onChangeCode}/>
+                </div>
                 <small className="text-muted">2-10 Characters</small>
             </FormColumn>
             <FormColumn label="Description">

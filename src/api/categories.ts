@@ -2,7 +2,7 @@ import {fetchJSON} from "chums-components";
 import {ProductCategory} from "chums-types";
 
 export const defaultCategory: ProductCategory = {
-    id: 0,
+    id: null,
     code: '',
     description: '',
     notes: '',
@@ -13,12 +13,14 @@ export const defaultCategory: ProductCategory = {
 }
 
 
-export async function fetchCategory(id: number|null): Promise<ProductCategory | null> {
+export async function fetchCategory(id: number|null|string): Promise<ProductCategory | null> {
     try {
         if (!id) {
             return {...defaultCategory};
         }
-        const url = `/api/operations/sku/categories/${encodeURIComponent(id)}`
+        const url = typeof id === 'string'
+            ? `/api/operations/sku/categories/code/${encodeURIComponent(id)}`
+            : `/api/operations/sku/categories/${encodeURIComponent(id)}`
         const {list = []} = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
         return list[0] ?? null;
     } catch (err: unknown) {

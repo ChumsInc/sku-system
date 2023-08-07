@@ -57,11 +57,12 @@ export const loadCategoryList = createAsyncThunk<ProductCategory[]>(
 export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
     'categories/current/load',
     async (arg) => {
-        return await fetchCategory(arg.id);
+        return await fetchCategory(arg.id ?? arg.code);
     }, {
         condition: (arg, {getState}) => {
             const state = getState() as RootState;
-            return !selectListLoading(state);
+            console.log(state, selectListLoading(state), selectLoading(state));
+            return !selectListLoading(state) && !selectLoading(state);
         }
     }
 )
@@ -140,7 +141,12 @@ const listReducer = createReducer(initialCategoriesListState, (builder) => {
             }
         })
         .addCase(saveCategory.fulfilled, (state, action) => {
-            if (action.payload) {
+            if (action.payload && !action.meta.arg.id && !!action.meta.arg.code) {
+                state.values = [
+                    ...state.values.filter(cat => cat.code !== action.payload?.code),
+                    action.payload,
+                ].sort(categorySorter(defaultSort));
+            } else if (action.payload) {
                 state.values = [
                     ...state.values.filter(cat => cat.id !== action.payload?.id),
                     action.payload,

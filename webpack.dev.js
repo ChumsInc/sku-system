@@ -13,7 +13,16 @@ const localProxy = {
 module.exports = merge(common, {
     mode: 'development',
     devServer: {
-        static: [path.join(__dirname, 'public'), __dirname],
+        static: [
+            {
+                directory: path.join(__dirname, 'public'),
+                watch: false,
+            },
+            {
+                directory: path.join(__dirname),
+                watch: false,
+            }
+        ],
         hot: true,
         proxy: {
             '/api': {...localProxy},

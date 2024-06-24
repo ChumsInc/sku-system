@@ -77,10 +77,12 @@ const skuListReducer = createReducer(initialSKUListState, (builder) => {
             }
         })
         .addCase(saveSKU.fulfilled, (state, action) => {
-            state.values = [
-                ...state.values.filter(row => row.id !== action.payload.id),
-                action.payload,
-            ].sort(productSKUSorter(defaultSort));
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(row => row.id !== action.payload?.id),
+                    action.payload,
+                ].sort(productSKUSorter(defaultSort));
+            }
         })
         .addCase(removeSKU.fulfilled, (state, action) => {
             state.values = action.payload.sort(productSKUSorter(defaultSort))

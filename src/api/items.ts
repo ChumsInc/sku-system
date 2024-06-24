@@ -8,8 +8,8 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
             return [];
         }
         const url = `/api/operations/sku/${encodeURIComponent(arg.sku)}`
-        const {list} = await fetchJSON<{ list: Product[] }>(url, {cache: 'no-cache'});
-        return list ?? [];
+        const res = await fetchJSON<{ list: Product[] }>(url, {cache: 'no-cache'});
+        return res?.list ?? [];
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchSKUItems()", err.message);
@@ -20,10 +20,14 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
     }
 }
 
-export async function postAssignNextColorUPC(arg: Product): Promise<Product> {
+export async function postAssignNextColorUPC(arg: Product): Promise<Product|null> {
     try {
         const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = arg;
-        const {nextUPC} = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+        const res = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+        if (!res?.nextUPC) {
+            return Promise.reject(new Error('Unable to fetch next UPC'))
+        }
+        const nextUPC = res?.nextUPC;
         await fetchJSON('/api/operations/sku/by-color', {
             method: 'POST',
             body: JSON.stringify({company, ItemCode, upc: nextUPC})
@@ -32,11 +36,11 @@ export async function postAssignNextColorUPC(arg: Product): Promise<Product> {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC, action: 'update'})
         })
-        const {item} = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item', {
+        const res2 = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC})
         });
-        return item;
+        return res2?.item ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("postAssignNextColorUPC()", err.message);

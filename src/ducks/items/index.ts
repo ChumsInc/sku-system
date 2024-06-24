@@ -51,7 +51,7 @@ export const loadSKUItems = createAsyncThunk<Product[], BaseSKU|null>(
 )
 
 
-export const assignNextColorUPCAction = createAsyncThunk<Product, Product>(
+export const assignNextColorUPCAction = createAsyncThunk<Product|null, Product>(
     'items/assignColorUPC',
     async (arg) => {
         return postAssignNextColorUPC(arg);
@@ -143,10 +143,12 @@ const itemsReducer = createReducer(initialItemsState, (builder) => {
         })
         .addCase(assignNextColorUPCAction.fulfilled, (state, action) => {
             state.assigningUPC = state.assigningUPC.filter(item => item !== action.meta.arg.ItemCode);
-            state.values = [
-                ...state.values.filter(item => item.ItemCode !== action.payload.ItemCode),
-                action.payload,
-            ].sort(productSorter(defaultSort));
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(item => item.ItemCode !== action.payload?.ItemCode),
+                    action.payload,
+                ].sort(productSorter(defaultSort));
+            }
         })
         .addCase(assignNextColorUPCAction.rejected, (state, action) => {
             state.assigningUPC = state.assigningUPC.filter(item => item !== action.meta.arg.ItemCode);

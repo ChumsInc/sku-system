@@ -22,8 +22,8 @@ export async function fetchColorUPC(id:number):Promise<ProductColorUPCResponse|n
             return {...defaultColorUPC}
         }
         const url = `/api/operations/sku/by-color/${encodeURIComponent(id)}`;
-        const {list = []} = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
-        return list[0] ?? null;
+        const res = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
+        return res?.list[0] ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchColorUPC()", err.message);
@@ -37,8 +37,8 @@ export async function fetchColorUPC(id:number):Promise<ProductColorUPCResponse|n
 export async function fetchColorUPCList():Promise<ProductColorUPCResponse[]> {
     try {
         const url = `/api/operations/sku/by-color`;
-        const {list} = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
-        return list ?? [];
+        const res = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
+        return res?.list ?? [];
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchColorUPCList()", err.message);
@@ -49,18 +49,21 @@ export async function fetchColorUPCList():Promise<ProductColorUPCResponse[]> {
     }
 }
 
-export async function postColorUPC(arg:ProductColorUPC):Promise<ProductColorUPCResponse> {
+export async function postColorUPC(arg:ProductColorUPC):Promise<ProductColorUPCResponse|null> {
     try {
         let upc = arg.upc;
         if (!upc) {
-            const {nextUPC} = await fetchJSON<{nextUPC:string}>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
-            upc = nextUPC;
+            const res = await fetchJSON<{nextUPC:string}>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+            if (!res?.nextUPC) {
+                return Promise.reject(new Error('Unable to fetch next UPC'));
+            }
+            upc = res?.nextUPC;
         }
-        const {colorUPC} = await fetchJSON<{colorUPC:ProductColorUPCResponse}>('/api/operations/sku/by-color', {
+        const res = await fetchJSON<{colorUPC:ProductColorUPCResponse}>('/api/operations/sku/by-color', {
             method: 'POST',
             body: JSON.stringify({...arg, upc})
         });
-        return colorUPC;
+        return res?.colorUPC ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("postColorUPC()", err.message);

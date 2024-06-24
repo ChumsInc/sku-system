@@ -66,7 +66,7 @@ export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCate
     }
 )
 
-export const saveCategory = createAsyncThunk<ProductCategory, ProductCategory>(
+export const saveCategory = createAsyncThunk<ProductCategory|null, ProductCategory>(
     'categories/current/save',
     async (arg) => {
         return await postCategory(arg);

@@ -23,20 +23,34 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
 export async function postAssignNextColorUPC(arg: Product): Promise<Product|null> {
     try {
         const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = arg;
-        const res = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
-        if (!res?.nextUPC) {
+        let nextUPC:string|null = null;
+        const params = new URLSearchParams();
+        params.set('company', company);
+        params.set('itemCode', ItemCode);
+        const url0 = `/api/operations/sku/by-color/item.json?${params.toString()}`;
+        const res0 = await fetchJSON<{ upc: string }>(url0, {cache: 'no-cache'});
+        if (res0?.upc) {
+            nextUPC = res0.upc;
+        } else {
+            const res = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
+            nextUPC = res?.nextUPC;
+            if (nextUPC) {
+                await fetchJSON('/api/operations/sku/by-color.json', {
+                    method: 'POST',
+                    body: JSON.stringify({company, ItemCode, upc: nextUPC})
+                });
+            }
+        }
+
+        if (!nextUPC) {
             return Promise.reject(new Error('Unable to fetch next UPC'))
         }
-        const nextUPC = res?.nextUPC;
-        await fetchJSON('/api/operations/sku/by-color', {
-            method: 'POST',
-            body: JSON.stringify({company, ItemCode, upc: nextUPC})
-        });
+
         await fetchJSON('/sage/api/item-upc.php', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC, action: 'update'})
         })
-        const res2 = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item', {
+        const res2 = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item.json', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC})
         });

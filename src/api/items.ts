@@ -23,16 +23,30 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
 export async function postAssignNextColorUPC(arg: Product): Promise<Product> {
     try {
         const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = arg;
-        const {nextUPC} = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
-        await fetchJSON('/api/operations/sku/by-color', {
-            method: 'POST',
-            body: JSON.stringify({company, ItemCode, upc: nextUPC})
-        });
+        const params = new URLSearchParams();
+        params.set('company', company);
+        params.set('itemCode', ItemCode);
+        const url = `/api/operations/sku/by-color/item.json?${params.toString()}`
+        let nextUPC:string|null = null;
+        const res1 = await fetchJSON<{nextUPC:string}>(url, {cache: 'no-cache'});
+        if (res1.nextUPC) {
+            nextUPC = res1.nextUPC;
+        } else {
+            const res2 = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
+            if (res2.nextUPC) nextUPC = res2.nextUPC;
+            await fetchJSON('/api/operations/sku/by-color.json', {
+                method: 'POST',
+                body: JSON.stringify({company, ItemCode, upc: nextUPC})
+            });
+        }
+        if (!nextUPC) {
+            return Promise.reject(new Error('No next UPC found'));
+        }
         await fetchJSON('/sage/api/item-upc.php', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC, action: 'update'})
         })
-        const {item} = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item', {
+        const {item} = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item.json', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC})
         });

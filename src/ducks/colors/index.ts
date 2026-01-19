@@ -61,7 +61,7 @@ export const loadProductColor = createAsyncThunk<ProductColor | null, ProductCol
         }
     }
 )
-export const saveProductColor = createAsyncThunk<ProductColor, ProductColor>(
+export const saveProductColor = createAsyncThunk<ProductColor|null, ProductColor>(
     'colors/current/save',
     async (arg) => {
         return await postProductColor(arg);
@@ -128,10 +128,12 @@ const colorsListReducer = createReducer(initialColorsListState, (builder) => {
             }
         })
         .addCase(saveProductColor.fulfilled, (state, action) => {
-            state.values = [
-                ...state.values.filter(color => color.id !== action.payload?.id),
-                action.payload,
-            ].sort(productColorSorter(defaultColorSort));
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(color => color.id !== action.payload?.id),
+                    action.payload,
+                ].sort(productColorSorter(defaultColorSort));
+            }
         })
         .addCase(setSearch, (state, action) => {
             state.search = action.payload;

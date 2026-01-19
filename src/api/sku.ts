@@ -17,8 +17,8 @@ export async function fetchSKU(id: number): Promise<BaseSKU | null> {
             return {...defaultBaseSKU};
         }
         const url = `/api/operations/sku/base/${encodeURIComponent(id)}`;
-        const {list = []} = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
-        return list[0] ?? null;
+        const res = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
+        return res?.list[0] ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchSKU()", err.message);
@@ -32,8 +32,8 @@ export async function fetchSKU(id: number): Promise<BaseSKU | null> {
 export async function fetchSKUList(groupId: number | null): Promise<BaseSKU[]> {
     try {
         const url = `/api/operations/sku/base/group/${encodeURIComponent(groupId ?? '')}`;
-        const {list} = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
-        return list ?? [];
+        const res = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
+        return res?.list ?? [];
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchSKUList()", err.message);
@@ -44,12 +44,12 @@ export async function fetchSKUList(groupId: number | null): Promise<BaseSKU[]> {
     }
 }
 
-export async function postSKU(arg: BaseSKU): Promise<BaseSKU> {
+export async function postSKU(arg: BaseSKU): Promise<BaseSKU|null> {
     try {
         const url = '/api/operations/sku/base';
         const body = JSON.stringify(arg);
-        const {skuBase} = await fetchJSON<{ skuBase: BaseSKU }>(url, {method: 'POST', body});
-        return skuBase;
+        const res = await fetchJSON<{ skuBase: BaseSKU }>(url, {method: 'POST', body});
+        return res?.skuBase ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("postSKU()", err.message);

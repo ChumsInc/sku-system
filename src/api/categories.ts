@@ -21,8 +21,8 @@ export async function fetchCategory(id: number|null|string): Promise<ProductCate
         const url = typeof id === 'string'
             ? `/api/operations/sku/categories/code/${encodeURIComponent(id)}`
             : `/api/operations/sku/categories/${encodeURIComponent(id)}`
-        const {list = []} = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
-        return list[0] ?? null;
+        const res = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
+        return res?.list?.[0] ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchCategory()", err.message);
@@ -36,8 +36,8 @@ export async function fetchCategory(id: number|null|string): Promise<ProductCate
 export async function fetchCategoryList(): Promise<ProductCategory[]> {
     try {
         const url = '/api/operations/sku/categories';
-        const {list = []} = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
-        return list;
+        const res = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
+        return res?.list ?? [];
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchCategoryList()", err.message);
@@ -48,12 +48,12 @@ export async function fetchCategoryList(): Promise<ProductCategory[]> {
     }
 }
 
-export async function postCategory(arg: ProductCategory): Promise<ProductCategory> {
+export async function postCategory(arg: ProductCategory): Promise<ProductCategory|null> {
     try {
         const url = '/api/operations/sku/categories';
         const body = JSON.stringify(arg);
-        const {category} = await fetchJSON<{ category: ProductCategory }>(url, {method: 'POST', body});
-        return category;
+        const res = await fetchJSON<{ category: ProductCategory }>(url, {method: 'POST', body});
+        return res?.category ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("postCategory()", err.message);

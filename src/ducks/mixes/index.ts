@@ -61,7 +61,7 @@ export const loadMix = createAsyncThunk<ProductMixInfo | null, number | undefine
     }
 )
 
-export const saveMix = createAsyncThunk<ProductMixInfo, ProductMixInfo>(
+export const saveMix = createAsyncThunk<ProductMixInfo|null, ProductMixInfo>(
     'mixes/current/save',
     async (arg) => {
         return postMix(arg);

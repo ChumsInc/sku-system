@@ -16,7 +16,7 @@ const initialVersionState: VersionState = {
 export const selectCurrentVersion = (state: RootState) => state.version.value;
 export const selectVersionLoading = (state: RootState) => state.version.loading === QueryStatus.pending;
 
-export const loadVersion = createAsyncThunk<string>(
+export const loadVersion = createAsyncThunk<string|null>(
     'version/load',
     async () => {
         return await fetchVersion();

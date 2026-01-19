@@ -14,8 +14,8 @@ export const defaultProductColor: ProductColor = {
 export async function fetchProductColorsList():Promise<ProductColor[]> {
     try {
         const url = '/api/operations/sku/colors';
-        const {list} = await fetchJSON<{list: ProductColor[]}>(url, {cache: "no-cache"});
-        return list ?? [];
+        const res = await fetchJSON<{list: ProductColor[]}>(url, {cache: "no-cache"});
+        return res?.list ?? [];
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchColorsList()", err.message);
@@ -32,8 +32,8 @@ export async function fetchProductColor(id:number):Promise<ProductColor|null> {
             return defaultProductColor;
         }
         const url = `/api/operations/sku/colors/${encodeURIComponent(id)}`;
-        const {list = []} = await fetchJSON<{list: ProductColor[]}>(url, {cache: "no-cache"});
-        return list[0] ?? null;
+        const res = await fetchJSON<{list: ProductColor[]}>(url, {cache: "no-cache"});
+        return res?.list[0] ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchProductColor()", err.message);
@@ -44,11 +44,11 @@ export async function fetchProductColor(id:number):Promise<ProductColor|null> {
     }
 }
 
-export async function postProductColor(arg:ProductColor):Promise<ProductColor> {
+export async function postProductColor(arg:ProductColor):Promise<ProductColor|null> {
     try {
         const url = `/api/operations/sku/colors/${encodeURIComponent(arg.id)}`;
-        const {color} = await fetchJSON<{color:ProductColor}>(url, {method: 'POST', body: JSON.stringify(arg)});
-        return color;
+        const res = await fetchJSON<{color:ProductColor}>(url, {method: 'POST', body: JSON.stringify(arg)});
+        return res?.color ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("postColor()", err.message);

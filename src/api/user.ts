@@ -2,8 +2,8 @@ import {fetchJSON} from "chums-components";
 
 export async function fetchIsAdmin():Promise<boolean> {
     try {
-        const {success} = await fetchJSON<{success: boolean}>('/api/user/validate/role/inventory_admin');
-        return success ?? false;
+        const res = await fetchJSON<{success: boolean}>('/api/user/validate/role/inventory_admin');
+        return res?.success ?? false;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchIsAdmin()", err.message);

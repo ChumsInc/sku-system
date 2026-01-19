@@ -43,7 +43,7 @@ export const loadSKUList = createAsyncThunk<BaseSKU[]>(
     }
 )
 
-export const saveSKU = createAsyncThunk<BaseSKU, BaseSKU>(
+export const saveSKU = createAsyncThunk<BaseSKU|null, BaseSKU>(
     'sku/current/save',
     async (arg) => {
         return await postSKU(arg);

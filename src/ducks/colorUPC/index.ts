@@ -63,7 +63,7 @@ export const loadColorUPCList = createAsyncThunk<ProductColorUPCResponse[]>(
     }
 )
 
-export const saveColorUPC = createAsyncThunk<ProductColorUPCResponse, ProductColorUPCResponse>(
+export const saveColorUPC = createAsyncThunk<ProductColorUPCResponse|null, ProductColorUPCResponse>(
     'colorUPC/save',
     async (arg,) => {
         return postColorUPC(arg);
@@ -147,10 +147,12 @@ const listReducer = createReducer(initialColorUPClListState, (builder) => {
             }
         })
         .addCase(saveColorUPC.fulfilled, (state, action) => {
-            state.values = [
-                ...state.values.filter(row => row.id !== action.meta.arg.id),
-                action.payload
-            ].sort(colorUPCSorter(defaultColorUPCSort));
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(row => row.id !== action.meta.arg.id),
+                    action.payload
+                ].sort(colorUPCSorter(defaultColorUPCSort));
+            }
         })
 
 });

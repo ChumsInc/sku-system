@@ -8,8 +8,8 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
             return [];
         }
         const url = `/api/operations/sku/${encodeURIComponent(arg.sku)}`
-        const {list} = await fetchJSON<{ list: Product[] }>(url, {cache: 'no-cache'});
-        return list ?? [];
+        const res = await fetchJSON<{ list: Product[] }>(url, {cache: 'no-cache'});
+        return res?.list ?? [];
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchSKUItems()", err.message);
@@ -20,37 +20,27 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
     }
 }
 
-export async function postAssignNextColorUPC(arg: Product): Promise<Product> {
+export async function postAssignNextColorUPC(arg: Product): Promise<Product|null> {
     try {
         const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = arg;
-        const params = new URLSearchParams();
-        params.set('company', company);
-        params.set('itemCode', ItemCode);
-        const url = `/api/operations/sku/by-color/item.json?${params.toString()}`
-        let nextUPC:string|null = null;
-        const res1 = await fetchJSON<{nextUPC:string}>(url, {cache: 'no-cache'});
-        if (res1.nextUPC) {
-            nextUPC = res1.nextUPC;
-        } else {
-            const res2 = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
-            if (res2.nextUPC) nextUPC = res2.nextUPC;
-            await fetchJSON('/api/operations/sku/by-color.json', {
-                method: 'POST',
-                body: JSON.stringify({company, ItemCode, upc: nextUPC})
-            });
+        const res = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+        if (!res?.nextUPC) {
+            return Promise.reject(new Error('Unable to fetch next UPC'))
         }
-        if (!nextUPC) {
-            return Promise.reject(new Error('No next UPC found'));
-        }
+        const nextUPC = res?.nextUPC;
+        await fetchJSON('/api/operations/sku/by-color', {
+            method: 'POST',
+            body: JSON.stringify({company, ItemCode, upc: nextUPC})
+        });
         await fetchJSON('/sage/api/item-upc.php', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC, action: 'update'})
         })
-        const {item} = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item.json', {
+        const res2 = await fetchJSON<{ item: Product }>('/api/operations/sku/by-color/update-item', {
             method: 'POST',
             body: JSON.stringify({Company: company, ItemCode, UDF_UPC_BY_COLOR: nextUPC})
         });
-        return item;
+        return res2?.item ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("postAssignNextColorUPC()", err.message);

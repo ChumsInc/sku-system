@@ -105,7 +105,7 @@ export const loadSKUGroupList = createAsyncThunk<SKUGroup[]>(
     }
 )
 
-export const saveSKUGroup = createAsyncThunk<SKUGroup, SKUGroup>(
+export const saveSKUGroup = createAsyncThunk<SKUGroup|null, SKUGroup>(
     'skuGroups/current/save',
     async (arg) => {
         return await postSKUGroup(arg);
@@ -177,10 +177,12 @@ const skuGroupListReducer = createReducer(initialSKUGroupListState, (builder) =>
             }
         })
         .addCase(saveSKUGroup.fulfilled, (state, action) => {
-            state.values = [
-                ...state.values.filter(group => group.id !== action.payload.id),
-                action.payload
-            ]
+            if (action.payload) {
+                state.values = [
+                    ...state.values.filter(group => group.id !== action.payload?.id),
+                    action.payload
+                ]
+            }
         })
 });
 

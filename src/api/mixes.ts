@@ -14,8 +14,8 @@ export const emptyMix:ProductMixInfo = {
 export async function fetchMixList():Promise<ProductMixInfo[]> {
     try {
         const url = '/api/operations/sku/mixes';
-        const {list} = await fetchJSON<{list:ProductMixInfo[]}>(url, {cache: "no-cache"});
-        return list ?? [];
+        const res = await fetchJSON<{list:ProductMixInfo[]}>(url, {cache: "no-cache"});
+        return res?.list ?? [];
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchMixList()", err.message);
@@ -32,8 +32,8 @@ export async function fetchMix(arg:number|undefined):Promise<ProductMixInfo|null
             return {...emptyMix};
         }
         const url = `/api/operations/sku/mixes/${encodeURIComponent(arg)}`;
-        const {list = []} = await fetchJSON<{list:ProductMixInfo[]}>(url, {cache: "no-cache"});
-        return list[0] ?? null;
+        const res = await fetchJSON<{list:ProductMixInfo[]}>(url, {cache: "no-cache"});
+        return res?.list[0] ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchMix()", err.message);
@@ -44,14 +44,14 @@ export async function fetchMix(arg:number|undefined):Promise<ProductMixInfo|null
     }
 }
 
-async function putMix(arg:ProductMixInfo):Promise<ProductMixInfo> {
+async function putMix(arg:ProductMixInfo):Promise<ProductMixInfo|null> {
     try {
         const url = `/api/operations/sku/mixes/${encodeURIComponent(arg.id)}`;
-        const {mix} = await fetchJSON<{mix:ProductMixInfo}>(url, {
+        const res = await fetchJSON<{mix:ProductMixInfo}>(url, {
             method: 'PUT',
             body: JSON.stringify(arg),
             });
-        return mix;
+        return res?.mix ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("putMix()", err.message);
@@ -62,17 +62,17 @@ async function putMix(arg:ProductMixInfo):Promise<ProductMixInfo> {
     }
 }
 
-export async function postMix(arg:ProductMixInfo):Promise<ProductMixInfo> {
+export async function postMix(arg:ProductMixInfo):Promise<ProductMixInfo|null> {
     try {
         if (arg.id) {
             return putMix(arg);
         }
         const url = `/api/operations/sku/mixes`;
-        const {mix} = await fetchJSON<{mix:ProductMixInfo}>(url, {
+        const res = await fetchJSON<{mix:ProductMixInfo}>(url, {
             method: 'POST',
             body: JSON.stringify(arg),
         });
-        return mix;
+        return res?.mix ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("postMix()", err.message);

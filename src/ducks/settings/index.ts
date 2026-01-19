@@ -22,7 +22,7 @@ const initialSettingsState:SettingsState = {
     productLines: [],
 }
 
-export const loadSettings = createAsyncThunk<SettingsResponse>('' +
+export const loadSettings = createAsyncThunk<SettingsResponse|null>('' +
     'settings/load',
     async (arg, {dispatch}) => {
         dispatch(loadSKUList());
@@ -46,7 +46,7 @@ const settingsReducer = createReducer(initialSettingsState, (builder) => {
         state.loading = QueryStatus.pending;
     })
         .addCase(loadSettings.fulfilled, (state, action) => {
-            state.productLines = action.payload.lines;
+            state.productLines = action.payload?.lines ?? [];
             state.loading = QueryStatus.fulfilled;
         })
         .addCase(loadSettings.rejected, (state, action) => {

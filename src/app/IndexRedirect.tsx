@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {redirect, useNavigate} from "react-router-dom";
+import {useEffect} from 'react';
+import {useNavigate} from "react-router";
 
 export default function IndexRedirect() {
     const navigate = useNavigate();

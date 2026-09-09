@@ -2,12 +2,11 @@
  * Created by steve on 3/21/2017.
  */
 
-import React from 'react';
 import ColorUPCFilter from "./ColorUPCFilter";
 import ColorUPCList from "./ColorUPCList";
 import ColorUPCEditor from "./ColorUPCEditor";
 
-const ColorUPCTab: React.FC = () => {
+const ColorUPCTab = () => {
 
     return (
         <div className="container">

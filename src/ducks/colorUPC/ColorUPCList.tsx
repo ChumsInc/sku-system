@@ -1,6 +1,6 @@
-import React, {useEffect} from "react";
+import {useEffect} from "react";
 import {useSelector} from "react-redux";
-import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
+import {SortableTable, type SortableTableField, type SortProps, TablePagination} from "@chumsinc/sortable-tables";
 import {
     loadColorUPC,
     loadColorUPCList,
@@ -15,9 +15,9 @@ import {
 } from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
-import GTIN from "../../GTIN";
 import {useAppDispatch} from "../../app/configureStore";
-import {ProductColorUPC, ProductColorUPCResponse} from "chums-types";
+import type {ProductColorUPC, ProductColorUPCResponse} from "chums-types";
+import {formatGTIN} from '@chumsinc/gtin-tools';
 
 const tableFields: SortableTableField<ProductColorUPCResponse>[] = [
     {field: 'company', title: 'Company', sortable: true},
@@ -28,14 +28,14 @@ const tableFields: SortableTableField<ProductColorUPCResponse>[] = [
         field: 'upc',
         title: 'UPC',
         sortable: true,
-        render: (row: ProductColorUPCResponse) => GTIN.format(row.upc),
+        render: (row: ProductColorUPC) => formatGTIN(row.upc),
         className: 'upc'
     },
     {
         field: 'notes',
         title: 'Notes',
         sortable: true,
-        render: (row: ProductColorUPCResponse) => (<TrimmedText text={row.notes || ''} length={35}/>)
+        render: (row: ProductColorUPC) => (<TrimmedText text={row.notes || ''} length={35}/>)
     },
 ];
 
@@ -45,7 +45,7 @@ const rowClassName = (row: ProductColorUPCResponse) => classNames({
     'table-warning': row.active && !row.ProductType,
 });
 
-const ColorUPCList: React.FC = () => {
+const ColorUPCList = () => {
     const dispatch = useAppDispatch();
     const list = useSelector(selectColorUPCList);
     const page = useSelector(selectPage)
@@ -75,8 +75,8 @@ const ColorUPCList: React.FC = () => {
                            rowClassName={rowClassName}
                            selected={selected?.upc} onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={pageChangeHandler} rowsPerPage={rowsPerPage}
-                             onChangeRowsPerPage={rowsPerPageChangeHandler}
-                             showFirst showLast bsSize="sm"
+                             rowsPerPageProps={{onChange: rowsPerPageChangeHandler}}
+                             showFirst showLast size="sm"
                              count={list.length}/>
         </>
     )

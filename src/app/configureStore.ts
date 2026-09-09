@@ -1,7 +1,6 @@
 import {configureStore} from '@reduxjs/toolkit'
 import {combineReducers} from "redux";
-import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
-import alertsReducer from "../ducks/alerts";
+import {type TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import categoriesReducer from "../ducks/categories";
 import colorUPCReducer from "../ducks/colorUPC";
 import colorsReducer from "../ducks/colors";
@@ -11,11 +10,11 @@ import skuReducer from "../ducks/sku";
 import itemsReducer from "../ducks/items";
 import settingsReducer from "../ducks/settings";
 import mixesReducer from "../ducks/mixes";
-import versionReducer from "../ducks/version";
+import {alertsSlice} from '@chumsinc/alert-list'
 
 
 const rootReducer = combineReducers({
-    alerts: alertsReducer,
+    [alertsSlice.reducerPath]: alertsSlice.reducer,
     categories: categoriesReducer,
     colors: colorsReducer,
     mixes: mixesReducer,
@@ -28,7 +27,6 @@ const rootReducer = combineReducers({
     // sortableTables: sortableTablesReducer,
     // tabs: tabsReducer,
     user: userReducer,
-    version: versionReducer,
 })
 
 const store = configureStore({

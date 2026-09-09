@@ -2,9 +2,9 @@ import {selectLoading, selectSKUGroupFilter, selectListLoading, selectSaving} fr
 import {selectIsAdmin} from "../users";
 import {createDefaultListActions} from "../redux-utils";
 import {createAction, createAsyncThunk} from "@reduxjs/toolkit";
-import {BaseSKU, SKUGroup} from "chums-types";
+import type {BaseSKU, SKUGroup} from "chums-types";
 import {deleteSKU, fetchSKU, fetchSKUList, postSKU} from "../../api/sku";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
 
 export const {
     setSearch,
@@ -22,7 +22,7 @@ export const loadSKU = createAsyncThunk<BaseSKU | null, BaseSKU>(
         return await fetchSKU(arg.id ?? 0);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectSaving(state) && !selectLoading(state);
         }
@@ -31,12 +31,12 @@ export const loadSKU = createAsyncThunk<BaseSKU | null, BaseSKU>(
 
 export const loadSKUList = createAsyncThunk<BaseSKU[]>(
     'sku/list/load',
-    async (arg, {getState}) => {
+    async (_, {getState}) => {
         const state = getState() as RootState;
         const group = selectSKUGroupFilter(state);
         return fetchSKUList(group?.id ?? null);
     }, {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectListLoading(state);
         }
@@ -49,7 +49,7 @@ export const saveSKU = createAsyncThunk<BaseSKU|null, BaseSKU>(
         return await postSKU(arg);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return selectIsAdmin(state) && !selectSaving(state) && !selectLoading(state);
         }

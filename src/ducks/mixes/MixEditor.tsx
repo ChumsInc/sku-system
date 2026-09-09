@@ -1,19 +1,21 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {saveMix, selectCurrentMix, selectMixLoading, selectMixSaving} from "./index";
-import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
-import {TextareaAutosize} from '@mui/base'
 import {useAppDispatch} from "../../app/configureStore";
-import {Editable, ProductMixInfo} from "chums-types";
+import type {Editable, ProductMixInfo} from "chums-types";
 import {emptyMix} from "../../api/mixes";
+import FormColumn from "@/components/FormColumn.tsx";
+import TextArea from "@chumsinc/textarea";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 
-const MixEditor: React.FC = () => {
+const MixEditor = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentMix);
@@ -59,20 +61,20 @@ const MixEditor: React.FC = () => {
                        onChange={onChange('description')}/>
             </FormColumn>
             <FormColumn label="Notes">
-                <TextareaAutosize readOnly={!isAdmin} value={mix.notes || ''} onChange={onChange('notes')}
-                          className="form-control form-control-sm"/>
+                <TextArea readOnly={!isAdmin} value={mix.notes || ''} onChange={onChange('notes')}
+                          size="sm"/>
             </FormColumn>
             <FormColumn label="Active">
                 <ActiveButtonGroup active={mix.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit" color="primary" spinning={isSaving} size="sm"
+                <SpinnerButton type="submit" variant="primary" spinning={isSaving} size="sm"
                                disabled={!isAdmin || isSaving || isLoading}>
                     Save
                 </SpinnerButton>
             </FormColumn>
             {mix.changed && (
-                <Alert color="warning">Don't forget to save your changes</Alert>
+                <Alert variant="warning">Don't forget to save your changes</Alert>
             )}
         </form>
     )

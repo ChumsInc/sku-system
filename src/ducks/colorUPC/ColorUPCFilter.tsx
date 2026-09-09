@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {
     loadColorUPC,
@@ -10,12 +10,12 @@ import {
     selectSearch,
     toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {useAppDispatch} from "../../app/configureStore";
 import {defaultColorUPC} from "../../api/colorUPC";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const ColorUPCFilter: React.FC = () => {
+const ColorUPCFilter = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const showInactive = useSelector(selectShowInactive);

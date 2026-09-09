@@ -1,6 +1,5 @@
-import {Product} from "../../types";
-import {SortProps} from "chums-components";
-import {BaseSKU} from "chums-types";
+import type {Product} from "../../types";
+import type {BaseSKU, SortProps} from "chums-types";
 
 export const defaultSort: SortProps<BaseSKU> = {
     field: "sku",

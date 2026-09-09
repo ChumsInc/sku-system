@@ -1,19 +1,20 @@
-import {RootState} from '../../app/configureStore'
+import type {RootState} from '../../app/configureStore'
 import {categorySorter} from "./utils";
 import {combineReducers, createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {defaultCategory, fetchCategory, fetchCategoryList, postCategory} from "../../api/categories";
-import {ProductCategory} from "chums-types";
+import type {ProductCategory, SortProps} from "chums-types";
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {SortProps} from "chums-components";
-import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
+import {localStorageKeys} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
 import {
     createDefaultListActions,
-    CurrentValueState,
+    type CurrentValueState,
     initialCurrentValueState,
+    type InitialListState,
     initialListState,
-    ListState
+    type ListState
 } from "../redux-utils";
+import {LocalStore} from "@chumsinc/ui-utils";
 
 const defaultSort: SortProps<ProductCategory> = {
     field: 'code',
@@ -21,13 +22,13 @@ const defaultSort: SortProps<ProductCategory> = {
 }
 
 const initialCategoriesListState = (): ListState<ProductCategory> => ({
-    ...initialListState,
+    ...initialListState as InitialListState<ProductCategory>,
     sort: defaultSort,
-    showInactive: getPreference(localStorageKeys.categoriesShowInactive, false),
+    showInactive: LocalStore.getItem(localStorageKeys.categoriesShowInactive, false),
 })
 
 const initialCurrentCategoryState: CurrentValueState<ProductCategory> = {
-    ...initialCurrentValueState,
+    ...initialCurrentValueState as CurrentValueState<ProductCategory>,
 }
 
 export const {
@@ -47,7 +48,7 @@ export const loadCategoryList = createAsyncThunk<ProductCategory[]>(
     async () => {
         return await fetchCategoryList();
     }, {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectListLoading(state) && !selectSaving(state);
         }
@@ -59,19 +60,19 @@ export const loadCategory = createAsyncThunk<ProductCategory | null, ProductCate
     async (arg) => {
         return await fetchCategory(arg.id ?? arg.code);
     }, {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectListLoading(state) && !selectLoading(state);
         }
     }
 )
 
-export const saveCategory = createAsyncThunk<ProductCategory|null, ProductCategory>(
+export const saveCategory = createAsyncThunk<ProductCategory | null, ProductCategory>(
     'categories/current/save',
     async (arg) => {
         return await postCategory(arg);
     }, {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return selectIsAdmin(state) && !selectSaving(state);
         }
@@ -156,7 +157,7 @@ const listReducer = createReducer(initialCategoriesListState, (builder) => {
             state.page = action.payload;
         })
         .addCase(setRowsPerPage, (state, action) => {
-            setPreference(localStorageKeys.categoriesRowsPerPage, action.payload);
+            LocalStore.setItem(localStorageKeys.categoriesRowsPerPage, action.payload);
             state.rowsPerPage = action.payload;
             state.page = 0;
         })
@@ -171,30 +172,30 @@ const listReducer = createReducer(initialCategoriesListState, (builder) => {
         .addCase(toggleShowInactive, (state, action) => {
             state.showInactive = action.payload ?? !state.showInactive;
             state.page = 0;
-            setPreference(localStorageKeys.categoriesShowInactive, state.showInactive);
+            LocalStore.setItem(localStorageKeys.categoriesShowInactive, state.showInactive);
         })
 });
 
 const currentReducer = createReducer(initialCurrentCategoryState, (builder) => {
     builder
-        .addCase(loadCategory.pending, (state, action) => {
+        .addCase(loadCategory.pending, (state,) => {
             state.loading = QueryStatus.pending;
         })
         .addCase(loadCategory.fulfilled, (state, action) => {
             state.loading = QueryStatus.fulfilled;
             state.value = action.payload;
         })
-        .addCase(loadCategory.rejected, (state, action) => {
+        .addCase(loadCategory.rejected, (state,) => {
             state.loading = QueryStatus.rejected;
         })
-        .addCase(saveCategory.pending, (state, action) => {
+        .addCase(saveCategory.pending, (state,) => {
             state.saving = QueryStatus.pending;
         })
         .addCase(saveCategory.fulfilled, (state, action) => {
             state.saving = QueryStatus.fulfilled
             state.value = action.payload;
         })
-        .addCase(saveCategory.rejected, (state, action) => {
+        .addCase(saveCategory.rejected, (state,) => {
             state.saving = QueryStatus.rejected;
         })
         .addCase(setNewCategory, (state) => {

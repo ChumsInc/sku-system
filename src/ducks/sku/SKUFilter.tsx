@@ -1,22 +1,21 @@
-import React, {ChangeEvent} from "react";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {
-    selectShowInactive,
-    selectSearch,
-    selectSKUGroupFilter,
     selectInactiveCount,
-    selectSKUListLength,
-    selectListLoading
+    selectListLoading,
+    selectSearch,
+    selectShowInactive,
+    selectSKUGroupFilter
 } from "./selectors";
 import SKUGroupSelect from "../groups/SKUGroupSelect";
-import {SKUGroup} from "chums-types";
+import type {SKUGroup} from "chums-types";
 import {loadSKU, loadSKUList, setSearch, setSKUGroupFilter, toggleShowInactive} from "./actions";
-import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {useAppDispatch} from "../../app/configureStore";
 import {defaultBaseSKU} from "../../api/sku";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const SKUFilter: React.FC = () => {
+const SKUFilter = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const showInactive = useSelector(selectShowInactive);

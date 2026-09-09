@@ -1,5 +1,4 @@
-import {SortProps} from "chums-components";
-import {ProductColor} from "chums-types";
+import type {ProductColor, SortProps} from "chums-types";
 
 export const defaultColorSort: SortProps<ProductColor> = {
     field: "code",

@@ -2,17 +2,19 @@ import {combineReducers} from "redux";
 import {defaultMixSort, productMixSorter} from "./utils";
 import {
     createDefaultListActions,
-    CurrentValueState,
+    type CurrentValueState,
     initialCurrentValueState,
+    type InitialListState,
     initialListState,
-    ListState
+    type ListState
 } from "../redux-utils";
-import {ProductMixInfo} from "chums-types";
-import {getPreference, localStorageKeys} from "../../api/preferences";
+import type {ProductMixInfo} from "chums-types";
+import {localStorageKeys} from "../../api/preferences";
 import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {emptyMix, fetchMix, fetchMixList, postMix} from "../../api/mixes";
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
+import {LocalStore} from "@chumsinc/ui-utils";
 
 
 export const {
@@ -24,13 +26,13 @@ export const {
 } = createDefaultListActions<ProductMixInfo>('mixes/list');
 
 export const initialMixListState = (): ListState<ProductMixInfo> => ({
-    ...initialListState,
-    rowsPerPage: getPreference(localStorageKeys.mixesRowsPerPage, 25),
+    ...initialListState as InitialListState<ProductMixInfo>,
+    rowsPerPage: LocalStore.getItem(localStorageKeys.mixesRowsPerPage, 25),
     sort: {...defaultMixSort},
 });
 
 const initialCurrentMixState: CurrentValueState<ProductMixInfo> = {
-    ...initialCurrentValueState,
+    ...initialCurrentValueState as CurrentValueState<ProductMixInfo>,
 }
 
 export const setNewMix = createAction('mixes/current/new');
@@ -41,7 +43,7 @@ export const loadMixes = createAsyncThunk<ProductMixInfo[]>(
         return await fetchMixList();
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectLoading(state);
         }
@@ -54,20 +56,20 @@ export const loadMix = createAsyncThunk<ProductMixInfo | null, number | undefine
         return await fetchMix(arg);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !(selectLoading(state) || selectMixLoading(state) || selectMixSaving(state));
         }
     }
 )
 
-export const saveMix = createAsyncThunk<ProductMixInfo|null, ProductMixInfo>(
+export const saveMix = createAsyncThunk<ProductMixInfo | null, ProductMixInfo>(
     'mixes/current/save',
     async (arg) => {
         return postMix(arg);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !(selectLoading(state) || selectMixLoading(state) || selectMixSaving(state));
         }
@@ -75,7 +77,7 @@ export const saveMix = createAsyncThunk<ProductMixInfo|null, ProductMixInfo>(
 )
 
 export const selectMixList = (state: RootState) => state.mixes.list.values;
-export const selectInactiveCount = (state:RootState)  => state.mixes.list.values.filter(item => !item.active).length;
+export const selectInactiveCount = (state: RootState) => state.mixes.list.values.filter(item => !item.active).length;
 
 
 export const selectSearch = (state: RootState) => state.mixes.list.search;
@@ -135,7 +137,7 @@ const listReducer = createReducer(initialMixListState, (builder) => {
             state.loading = QueryStatus.fulfilled;
             state.values = action.payload.sort(productMixSorter(defaultMixSort));
         })
-        .addCase(loadMixes.rejected, (state, action) => {
+        .addCase(loadMixes.rejected, (state) => {
             state.loading = QueryStatus.rejected;
         })
         .addCase(loadMix.fulfilled, (state, action) => {

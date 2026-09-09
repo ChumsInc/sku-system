@@ -2,12 +2,11 @@
  * Created by steve on 3/21/2017.
  */
 
-import React from 'react';
 import GroupsFilter from "./GroupsFilter";
 import GroupsList from "./GroupsList";
 import GroupEditor from "./GroupEditor";
 
-const GroupsTab: React.FC = () => {
+const GroupsTab = () => {
 
     return (
         <div className="container">

@@ -1,7 +1,7 @@
-import React, {useEffect} from "react";
+import {useEffect} from "react";
 import {useSelector} from "react-redux";
-import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
-import {ProductColor} from "chums-types";
+import {SortableTable, type SortableTableField, type SortProps, TablePagination} from "@chumsinc/sortable-tables";
+import type {ProductColor} from "chums-types";
 import {
     loadColorsList,
     loadProductColor,
@@ -34,7 +34,7 @@ const fields: SortableTableField<ProductColor>[] = [
 
 const rowClassName = (row: ProductColor) => classNames({'table-danger': !row.active});
 
-const ColorsList: React.FC = () => {
+const ColorsList = () => {
     const dispatch = useAppDispatch();
     const sort = useSelector(selectSort);
     const list = useSelector(selectFilteredColorsList);
@@ -64,8 +64,8 @@ const ColorsList: React.FC = () => {
                            rowClassName={rowClassName}
                            selected={selected?.id} onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={pageChangeHandler}
-                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
-                             showFirst showLast bsSize="sm"
+                             rowsPerPage={rowsPerPage} rowsPerPageProps={{onChange: rowsPerPageChangeHandler}}
+                             showFirst showLast size="sm"
                              count={list.length}/>
         </>
     )

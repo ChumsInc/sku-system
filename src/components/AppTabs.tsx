@@ -1,6 +1,6 @@
-import {Tab, TabList} from "chums-components";
-import React from "react";
-import {NavLink} from "react-router-dom";
+import type {Tab} from "chums-types";
+import {NavLink} from "react-router";
+import Nav from "react-bootstrap/Nav";
 
 
 export interface RoutedTab extends Tab {
@@ -32,18 +32,18 @@ export const appTabs: RoutedTab[] = [
     TAB_CATEGORIES
 ];
 
-const AppTabs: React.FC = () => {
+const AppTabs = () => {
 
     return (
-        <TabList className="mb-1">
+        <Nav variant="tabs" className="mb-1">
             {appTabs.map(tab => (
-                <li className="nav-item" key={tab.id}>
-                    <NavLink to={tab.to} className="nav-link">
+                <Nav.Item key={tab.id}>
+                    <Nav.Link as={NavLink} to={tab.to}>
                         {tab.title}
-                    </NavLink>
-                </li>
+                    </Nav.Link>
+                </Nav.Item>
             ))}
-        </TabList>
+        </Nav>
     )
 }
 

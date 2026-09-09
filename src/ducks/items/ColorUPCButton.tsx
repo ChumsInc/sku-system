@@ -1,10 +1,9 @@
-import React from "react";
 import {useSelector} from "react-redux";
 import {assignNextColorUPCAction, selectAssigningItems} from "./index";
-import {Product} from "../../types";
-import {SpinnerButton} from "chums-components";
+import type {Product} from "../../types";
 import {useAppDispatch} from "../../app/configureStore";
 import {formatGTIN} from "@chumsinc/gtin-tools";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
 export interface ColorUPCButtonProps {
     item: Product,

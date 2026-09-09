@@ -1,7 +1,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
 import {Provider} from 'react-redux';
-import {HashRouter as Router} from 'react-router-dom';
+import {HashRouter as Router} from 'react-router';
 import App from './app/App';
 import store from './app/configureStore'
 // import CssBaseline from "@mui/material/CssBaseline";

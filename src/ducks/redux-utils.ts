@@ -1,8 +1,8 @@
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {SortProps} from "chums-components";
+import type {SortProps} from "chums-types";
 import {createAction} from "@reduxjs/toolkit";
 
-export interface ListState<T=any> {
+export interface ListState<T=unknown> {
     values: T[];
     loading:QueryStatus,
     loaded: boolean;
@@ -13,13 +13,15 @@ export interface ListState<T=any> {
     sort: SortProps<T>
 }
 
-export interface CurrentValueState<T=any> {
+export interface CurrentValueState<T=unknown> {
     value:T|null;
     loading: QueryStatus;
     saving: QueryStatus
 }
 
-export const initialListState:Omit<ListState, 'sort'> = {
+export type InitialListState<T = unknown> = Omit<ListState<T>, 'sort'>
+
+export const initialListState:InitialListState = {
     values: [],
     loading: QueryStatus.uninitialized,
     loaded: false,

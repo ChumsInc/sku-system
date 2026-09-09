@@ -1,5 +1,5 @@
-import {SettingsResponse} from "../types";
-import {fetchJSON} from "chums-components";
+import type {SettingsResponse} from "../types";
+import {fetchJSON} from "@chumsinc/ui-utils";
 
 
 export async function fetchSettings(): Promise<SettingsResponse|null> {

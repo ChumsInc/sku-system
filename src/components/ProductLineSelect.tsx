@@ -1,21 +1,21 @@
-import React, {ChangeEvent} from "react";
-import {Select} from "chums-components";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {selectProductLineList} from "../ducks/settings";
-import {ProductLine} from "chums-types";
+import type {ProductLine} from "chums-types";
+import FormSelect from "react-bootstrap/FormSelect";
 
 export interface ProductLineSelectProps {
     value: string,
     disabled?: boolean,
     required?: boolean,
-    onChange?: (ev:ChangeEvent<HTMLSelectElement>) => void,
-    onSelect?: (pl?:ProductLine) => void,
+    onChange?: (ev: ChangeEvent<HTMLSelectElement>) => void,
+    onSelect?: (pl?: ProductLine) => void,
 }
 
-const ProductLineSelect:React.FC<ProductLineSelectProps> = ({value, disabled, required, onChange, onSelect}) => {
+const ProductLineSelect = ({value, disabled, required, onChange, onSelect}: ProductLineSelectProps) => {
     const list = useSelector(selectProductLineList);
 
-    const changeHandler = (ev:ChangeEvent<HTMLSelectElement>) => {
+    const changeHandler = (ev: ChangeEvent<HTMLSelectElement>) => {
         const code = ev.target.value;
         const [pl] = list.filter(pl => pl.ProductLine === code);
         if (!!onChange) {
@@ -26,12 +26,12 @@ const ProductLineSelect:React.FC<ProductLineSelectProps> = ({value, disabled, re
         }
     }
     return (
-        <Select bsSize="sm" onChange={changeHandler} value={value} disabled={disabled} required={required}>
+        <FormSelect size="sm" onChange={changeHandler} value={value} disabled={disabled} required={required}>
             <option value="">Select Product Line</option>
             {list.map(pl => (
                 <option key={pl.ProductLine} value={pl.ProductLine}>{pl.ProductLine} - {pl.ProductLineDesc}</option>
             ))}
-        </Select>
+        </FormSelect>
     )
 }
 

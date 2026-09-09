@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {
     loadColorsList,
@@ -10,12 +10,12 @@ import {
     setSearch,
     toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {defaultProductColor} from "../../api/color";
 import {useAppDispatch} from "../../app/configureStore";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const ColorsFilter: React.FC = () => {
+const ColorsFilter = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const showInactive = useSelector(selectShowInactive);
@@ -43,7 +43,7 @@ const ColorsFilter: React.FC = () => {
                 </button>
             </div>
             <div className="col-auto">
-                <SpinnerButton type="button" size="sm" spinning={loading} onClick={onClickReload}>
+                <SpinnerButton type="button" size="sm" spinnerProps={{}} spinnerPosition="end" spinning={loading} onClick={onClickReload}>
                     Reload
                 </SpinnerButton>
             </div>

@@ -2,10 +2,10 @@
  * Created by steve on 3/24/2017.
  */
 
-import React, {ChangeEvent, useEffect} from 'react';
+import {type ChangeEvent, useEffect} from 'react';
 import {useSelector} from 'react-redux';
 import TrimmedText from "../../components/TrimmedText";
-import {Product} from "../../types";
+import type {Product} from "../../types";
 import ColorUPCButton from "./ColorUPCButton";
 import {
     loadSKUItems,
@@ -24,15 +24,16 @@ import {
     setSort,
     toggleShowInactive
 } from "./index";
-import {Alert, SortableTable, SortableTableField, SortProps, SpinnerButton, TablePagination} from "chums-components";
+import {SortableTable, type SortableTableField, type SortProps, TablePagination} from "@chumsinc/sortable-tables";
 import {selectCurrentSKU} from "../sku/selectors";
 import classNames from "classnames";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {useAppDispatch} from "../../app/configureStore";
 import {formatGTIN} from "@chumsinc/gtin-tools";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 const tableFields: SortableTableField<Product>[] = [
-    {field: 'company', title: 'Co', sortable: true},
     {field: 'ItemCode', title: 'Item', sortable: true},
     {
         field: 'ItemCodeDesc',
@@ -112,11 +113,11 @@ function SKUItemList() {
                            currentSort={sort} onChangeSort={sortChangeHandler}
 
                            rowClassName={rowClassName}/>
-            {!sku?.id && <Alert color="info">Select SKU</Alert>}
-            {!!sku?.id && !loading && !listLength && <Alert color="warning">No Items</Alert>}
+            {!sku?.id && <Alert variant="info">Select SKU</Alert>}
+            {!!sku?.id && !loading && !listLength && <Alert variant="warning">No Items</Alert>}
             <TablePagination page={page} onChangePage={pageChangeHandler}
-                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={rowsPerPageChangeHandler}
-                             showFirst showLast bsSize="sm"
+                             rowsPerPage={rowsPerPage} rowsPerPageProps={{onChange: rowsPerPageChangeHandler}}
+                             showFirst showLast size="sm"
                              count={list.length}/>
         </div>
     )

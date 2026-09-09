@@ -1,6 +1,6 @@
 import {combineReducers} from 'redux';
 import {defaultSort, productSKUSorter} from "./utils";
-import {CurrentValueState, initialCurrentValueState, initialListState, ListState} from "../redux-utils";
+import {type CurrentValueState, initialCurrentValueState, initialListState, type ListState} from "../redux-utils";
 import {createReducer} from "@reduxjs/toolkit";
 import {
     loadSKU,
@@ -14,9 +14,10 @@ import {
     setSort,
     toggleShowInactive
 } from "./actions";
-import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
-import {BaseSKU, SKUGroup} from "chums-types";
+import {localStorageKeys} from "../../api/preferences";
+import type {BaseSKU, SKUGroup} from "chums-types";
 import {QueryStatus} from "@reduxjs/toolkit/query";
+import {LocalStore} from "@chumsinc/ui-utils";
 
 
 export interface SKUListState extends ListState<BaseSKU> {
@@ -27,13 +28,13 @@ const initialSKUListState = (): SKUListState => ({
     ...initialListState,
     values: [],
     sort: {...defaultSort},
-    rowsPerPage: getPreference(localStorageKeys.skuListRowsPerPage, 25),
-    showInactive: getPreference(localStorageKeys.skuListShowInactive, false),
+    rowsPerPage: LocalStore.getItem(localStorageKeys.skuListRowsPerPage, 25),
+    showInactive: LocalStore.getItem(localStorageKeys.skuListShowInactive, false),
     skuGroup: null,
 })
 
 const initialCurrentSKUState: CurrentValueState<BaseSKU> = {
-    ...initialCurrentValueState,
+    ...initialCurrentValueState as CurrentValueState<BaseSKU>,
 }
 
 const skuListReducer = createReducer(initialSKUListState, (builder) => {
@@ -43,13 +44,13 @@ const skuListReducer = createReducer(initialSKUListState, (builder) => {
         })
         .addCase(toggleShowInactive, (state, action) => {
             state.showInactive = action.payload ?? !state.showInactive;
-            setPreference(localStorageKeys.skuListShowInactive, state.showInactive);
+            LocalStore.setItem(localStorageKeys.skuListShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
         })
         .addCase(setRowsPerPage, (state, action) => {
-            setPreference<number>(localStorageKeys.skuListRowsPerPage, action.payload);
+            LocalStore.setItem<number>(localStorageKeys.skuListRowsPerPage, action.payload);
             state.rowsPerPage = action.payload;
         })
         .addCase(setSort, (state, action) => {

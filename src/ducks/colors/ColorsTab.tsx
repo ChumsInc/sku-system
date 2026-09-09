@@ -2,12 +2,11 @@
  * Created by steve on 3/21/2017.
  */
 
-import React from 'react';
 import ColorsFilter from "./ColorsFilter";
 import ColorsList from "./ColorsList";
 import ColorEditor from "./ColorEditor";
 
-const ColorsTab: React.FC = () => {
+const ColorsTab = () => {
 
     return (
         <div className="container">

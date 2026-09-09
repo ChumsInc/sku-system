@@ -1,4 +1,3 @@
-import React from "react";
 import {useSelector} from "react-redux";
 import {
     loadCategory,
@@ -15,10 +14,9 @@ import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
 import {categoryKey} from "./utils";
 import {useAppDispatch} from "../../app/configureStore";
-import {ProductCategory} from "chums-types";
-import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
+import type {ProductCategory} from "chums-types";
+import {SortableTable, type SortableTableField, type SortProps, TablePagination} from "@chumsinc/sortable-tables";
 
-const tableId = 'groups-list';
 
 const fields: SortableTableField<ProductCategory>[] = [
     {field: 'code', title: 'Code', sortable: true},
@@ -34,7 +32,7 @@ const fields: SortableTableField<ProductCategory>[] = [
 
 const rowClassName = (row: ProductCategory) => classNames({'table-danger': !row.active});
 
-const CategoriesList: React.FC = () => {
+const CategoriesList = () => {
     const dispatch = useAppDispatch();
     const sort = useSelector(selectSort);
     const list = useSelector(selectCategoryList);
@@ -61,8 +59,11 @@ const CategoriesList: React.FC = () => {
                            onChangeSort={sortChangedHandler}
                            rowClassName={rowClassName}
                            selected={categoryKey(selected)} onSelectRow={onSelectRow}/>
-            <TablePagination page={page} onChangePage={onChangePage} bsSize="sm"
-                             rowsPerPage={rowsPerPage} onChangeRowsPerPage={onChangeRowsPerPage}
+            <TablePagination page={page} onChangePage={onChangePage} size="sm"
+                             rowsPerPage={rowsPerPage}
+                             rowsPerPageProps={{
+                                 onChange: onChangeRowsPerPage
+                             }}
                              showFirst showLast
                              count={list.length}/>
         </>

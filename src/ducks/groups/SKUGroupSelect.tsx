@@ -1,8 +1,8 @@
-import React, {ChangeEvent} from "react";
-import {Select} from "chums-components";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {selectList} from "./index";
-import {SKUGroup} from "chums-types";
+import type {SKUGroup} from "chums-types";
+import FormSelect from "react-bootstrap/FormSelect";
 
 
 export interface SKUGroupSelectProps {
@@ -14,13 +14,13 @@ export interface SKUGroupSelectProps {
     onChange: (group: SKUGroup | undefined) => void,
 }
 
-const SKUGroupSelect: React.FC<SKUGroupSelectProps> = ({
+const SKUGroupSelect = ({
                                                            value,
                                                            className,
                                                            showInactive,
                                                            allowAllGroups,
                                                            onChange
-                                                       }) => {
+                                                       }:SKUGroupSelectProps) => {
     const skuGroups = useSelector(selectList);
     const [selected] = skuGroups.filter(group => group.id === value);
 
@@ -30,7 +30,7 @@ const SKUGroupSelect: React.FC<SKUGroupSelectProps> = ({
         return onChange(group);
     }
     return (
-        <Select value={selected?.id || ''} className={className} onChange={changeHandler} bsSize="sm">
+        <FormSelect value={selected?.id || ''} className={className} onChange={changeHandler} size="sm">
             {!allowAllGroups && (<option>Select SKU Group</option>)}
             {allowAllGroups && (<option value="">All SKU Groups</option>)}
             {skuGroups
@@ -40,7 +40,7 @@ const SKUGroupSelect: React.FC<SKUGroupSelectProps> = ({
                         {group.code} - {group.description}
                     </option>
                 ))}
-        </Select>
+        </FormSelect>
     )
 }
 

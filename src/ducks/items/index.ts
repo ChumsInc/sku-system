@@ -1,14 +1,14 @@
-import {Product} from "../../types";
+import type {Product} from "../../types";
 import {productSorter} from "../sku/utils";
 import {selectIsAdmin} from "../users";
-import {SortProps} from "chums-components";
-import {BaseSKU} from "chums-types";
-import {createDefaultListActions, initialListState, ListState} from "../redux-utils";
+import type {BaseSKU, SortProps} from "chums-types";
+import {createDefaultListActions, type InitialListState, initialListState, type ListState} from "../redux-utils";
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
+import {localStorageKeys} from "../../api/preferences";
 import {createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
 import {fetchSKUItems, postAssignNextColorUPC} from "../../api/items";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
+import {LocalStore} from "@chumsinc/ui-utils";
 
 
 export const defaultSort: SortProps<Product> = {
@@ -21,11 +21,11 @@ export interface ItemsState extends ListState<Product> {
 }
 
 export const initialItemsState = (): ItemsState => ({
-    ...initialListState,
-    rowsPerPage: getPreference<number>(localStorageKeys.itemsRowsPerPage, 25),
+    ...initialListState as InitialListState<Product>,
+    rowsPerPage: LocalStore.getItem<number>(localStorageKeys.itemsRowsPerPage, 25),
     sort: {...defaultSort},
     assigningUPC: [],
-    showInactive: getPreference(localStorageKeys.itemsShowInactive, false),
+    showInactive: LocalStore.getItem(localStorageKeys.itemsShowInactive, false),
 });
 
 export const {
@@ -43,7 +43,7 @@ export const loadSKUItems = createAsyncThunk<Product[], BaseSKU|null>(
     async (arg) => {
         return await fetchSKUItems(arg);
     }, {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectLoading(state) && !selectAssigningItems(state).length;
         }
@@ -112,13 +112,13 @@ const itemsReducer = createReducer(initialItemsState, (builder) => {
         .addCase(toggleShowInactive, (state, action) => {
             state.showInactive = action.payload ?? !state.showInactive;
             state.page = 0;
-            setPreference(localStorageKeys.itemsShowInactive, state.showInactive);
+            LocalStore.setItem(localStorageKeys.itemsShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
         })
         .addCase(setRowsPerPage, (state, action) => {
-            setPreference<number>(localStorageKeys.itemsRowsPerPage, action.payload);
+            LocalStore.setItem<number>(localStorageKeys.itemsRowsPerPage, action.payload);
             state.rowsPerPage = action.payload;
             state.page = 0;
         })
@@ -133,7 +133,7 @@ const itemsReducer = createReducer(initialItemsState, (builder) => {
             state.loading = QueryStatus.fulfilled;
             state.values = action.payload.sort(productSorter(defaultSort));
         })
-        .addCase(loadSKUItems.rejected, (state, action) => {
+        .addCase(loadSKUItems.rejected, (state,) => {
             state.loading = QueryStatus.rejected;
         })
         .addCase(assignNextColorUPCAction.pending, (state, action) => {

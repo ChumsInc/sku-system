@@ -2,12 +2,11 @@
  * Created by steve on 3/21/2017.
  */
 
-import React from 'react';
 import CategoriesFilter from "./CategoriesFilter";
 import CategoriesList from "./CategoriesList";
 import CategoriesEditor from "./CategoriesEditor";
 
-const CategoriesTab: React.FC = () => {
+const CategoriesTab = () => {
 
     return (
         <div className="container">

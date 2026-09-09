@@ -1,13 +1,13 @@
-import React from "react";
 import classNames from "classnames";
 
 
 export interface ActiveButtonGroupProps {
     active: boolean,
     disabled?: boolean,
-    onChange: (active:boolean) => void,
+    onChange: (active: boolean) => void,
 }
-const ActiveButtonGroup:React.FC<ActiveButtonGroupProps> = ({active, disabled, onChange}) => {
+
+export default function ActiveButtonGroup({active, disabled, onChange}: ActiveButtonGroupProps) {
     const activeButtonClassName = {
         'btn-success': active,
         'btn-outline-success': !active
@@ -32,5 +32,3 @@ const ActiveButtonGroup:React.FC<ActiveButtonGroupProps> = ({active, disabled, o
         </div>
     )
 }
-
-export default ActiveButtonGroup;

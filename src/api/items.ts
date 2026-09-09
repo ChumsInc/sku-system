@@ -1,8 +1,8 @@
-import {BaseSKU} from "chums-types";
-import {Product} from "../types";
-import {fetchJSON} from "chums-components";
+import type {BaseSKU} from "chums-types";
+import type {Product} from "../types";
+import {fetchJSON} from "@chumsinc/ui-utils";
 
-export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
+export async function fetchSKUItems(arg: BaseSKU | null): Promise<Product[]> {
     try {
         if (!arg) {
             return [];
@@ -20,10 +20,10 @@ export async function fetchSKUItems(arg: BaseSKU|null): Promise<Product[]> {
     }
 }
 
-export async function postAssignNextColorUPC(arg: Product): Promise<Product|null> {
+export async function postAssignNextColorUPC(arg: Product): Promise<Product | null> {
     try {
-        const {company, ItemCode, UDF_UPC_BY_COLOR, InactiveItem, ProductType} = arg;
-        let nextUPC:string|null = null;
+        const {company, ItemCode} = arg;
+        let nextUPC: string | null = null;
         const params = new URLSearchParams();
         params.set('company', company);
         params.set('itemCode', ItemCode);
@@ -32,8 +32,10 @@ export async function postAssignNextColorUPC(arg: Product): Promise<Product|null
         if (res0?.upc) {
             nextUPC = res0.upc;
         } else {
-            const res = await fetchJSON<{ nextUPC: string }>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
-            nextUPC = res?.nextUPC;
+            const res = await fetchJSON<{
+                nextUPC: string
+            }>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
+            nextUPC = res?.nextUPC ?? null;
             if (nextUPC) {
                 await fetchJSON('/api/operations/sku/by-color.json', {
                     method: 'POST',

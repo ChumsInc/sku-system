@@ -1,5 +1,5 @@
-import {ProductMixInfo} from "chums-types";
-import {fetchJSON} from "chums-components";
+import type {ProductMixInfo} from "chums-types";
+import {fetchJSON} from "@chumsinc/ui-utils";
 
 export const emptyMix:ProductMixInfo = {
     id: 0,

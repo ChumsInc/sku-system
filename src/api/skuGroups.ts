@@ -1,5 +1,5 @@
-import {SKUGroup} from "chums-types";
-import {fetchJSON} from "chums-components";
+import type {SKUGroup} from "chums-types";
+import {fetchJSON} from "@chumsinc/ui-utils";
 import {defaultSKUGroup} from "../ducks/groups";
 
 export async function fetchSKUGroups():Promise<SKUGroup[]> {

@@ -1,7 +1,7 @@
-import React, {Fragment, useEffect} from 'react';
+import {Fragment, useEffect} from 'react';
 import {useSelector} from 'react-redux';
 import TrimmedText from "../../components/TrimmedText";
-import {LoadingProgressBar, SortableTable, SortableTableField, TablePagination,} from "chums-components";
+import {SortableTable, type SortableTableField, TablePagination,} from "@chumsinc/sortable-tables";
 import {
     selectFilteredSKUList,
     selectListLoaded,
@@ -15,8 +15,9 @@ import {loadSKU, loadSKUList, setPage, setRowsPerPage, setSort} from "./actions"
 import classNames from "classnames";
 import {loadSKUItems} from "../items";
 import {useAppDispatch} from "../../app/configureStore";
-import {BaseSKU} from "chums-types";
+import type {BaseSKU} from "chums-types";
 import {formatGTIN} from "@chumsinc/gtin-tools";
+import {ProgressBar} from "react-bootstrap";
 
 
 const tableFields: SortableTableField<BaseSKU>[] = [
@@ -30,8 +31,6 @@ const tableFields: SortableTableField<BaseSKU>[] = [
         render: ({notes}) => (<TrimmedText text={notes ?? ''} length={25}/>)
     }
 ];
-
-const tableID = 'main-sku-list';
 
 const rowClassName = (row: BaseSKU) => classNames({
     'text-danger': !row.active,
@@ -63,7 +62,7 @@ const BaseSKUList = () => {
 
     return (
         <Fragment>
-            {loading && <LoadingProgressBar animated striped className="mb-1"/>}
+            {loading && <ProgressBar animated striped className="mb-1"/>}
             <SortableTable keyField={"sku"} fields={tableFields}
                            data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
                            size="xs"
@@ -73,7 +72,7 @@ const BaseSKUList = () => {
                            selected={selected?.sku}
                            onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={pageChangeHandler} rowsPerPage={rowsPerPage}
-                             onChangeRowsPerPage={rowsPerPageChangeHandler} count={list.length} bsSize="sm"/>
+                             rowsPerPageProps={{onChange: rowsPerPageChangeHandler}} count={list.length} size="sm"/>
         </Fragment>
     )
 }

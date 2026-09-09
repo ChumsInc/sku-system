@@ -1,15 +1,15 @@
 
 import {QueryStatus} from "@reduxjs/toolkit/query";
-import {ProductLine} from "chums-types";
+import type {ProductLine} from "chums-types";
 import {createAsyncThunk, createReducer} from "@reduxjs/toolkit";
-import {SettingsResponse} from "../../types";
+import type {SettingsResponse} from "../../types";
 import {fetchSettings} from "../../api/settings";
 import {loadSKUList} from "../sku/actions";
 import {loadCategoryList} from "../categories";
 import {loadColorsList} from "../colors";
 import {loadColorUPCList} from "../colorUPC";
 import {loadSKUGroupList} from "../groups";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
 import {loadMixes} from "../mixes";
 
 export interface SettingsState {
@@ -24,7 +24,7 @@ const initialSettingsState:SettingsState = {
 
 export const loadSettings = createAsyncThunk<SettingsResponse|null>('' +
     'settings/load',
-    async (arg, {dispatch}) => {
+    async (_, {dispatch}) => {
         dispatch(loadSKUList());
         dispatch(loadCategoryList());
         dispatch(loadColorsList());
@@ -34,7 +34,7 @@ export const loadSettings = createAsyncThunk<SettingsResponse|null>('' +
         return await fetchSettings();
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectLoading(state);
         }
@@ -42,14 +42,14 @@ export const loadSettings = createAsyncThunk<SettingsResponse|null>('' +
 
 const settingsReducer = createReducer(initialSettingsState, (builder) => {
     builder
-        .addCase(loadSettings.pending, (state, action) => {
+        .addCase(loadSettings.pending, (state, ) => {
         state.loading = QueryStatus.pending;
     })
         .addCase(loadSettings.fulfilled, (state, action) => {
             state.productLines = action.payload?.lines ?? [];
             state.loading = QueryStatus.fulfilled;
         })
-        .addCase(loadSettings.rejected, (state, action) => {
+        .addCase(loadSettings.rejected, (state, ) => {
             state.loading = QueryStatus.rejected;
         })
 });

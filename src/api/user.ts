@@ -1,8 +1,8 @@
-import {fetchJSON} from "chums-components";
+import {fetchJSON} from "@chumsinc/ui-utils";
 
 export async function fetchIsAdmin():Promise<boolean> {
     try {
-        const res = await fetchJSON<{success: boolean}>('/api/user/validate/role/inventory_admin');
+        const res = await fetchJSON<{success: boolean}>('/api/user/v2/validate/role/inventory_admin.json');
         return res?.success ?? false;
     } catch(err:unknown) {
         if (err instanceof Error) {

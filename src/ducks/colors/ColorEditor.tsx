@@ -1,18 +1,20 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {saveProductColor, selectCurrentColor, selectLoading, selectSaving} from "./index";
-import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import {defaultProductColor} from "../../api/color";
-import {Editable, ProductColor} from "chums-types";
+import type {Editable, ProductColor} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
+import FormColumn from "@/components/FormColumn.tsx";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 
-const ColorEditor: React.FC = () => {
+const ColorEditor = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentColor);
@@ -65,13 +67,13 @@ const ColorEditor: React.FC = () => {
                 <ActiveButtonGroup active={color.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit"
-                               color="primary" size="sm" spinning={saving} disabled={loading || !isAdmin}>
+                <SpinnerButton type="submit" spinnerProps={{size: 'sm'}} spinnerPosition="end"
+                               variant="primary" size="sm" spinning={saving} disabled={loading || !isAdmin}>
                     Save
                 </SpinnerButton>
             </FormColumn>
             {color.changed && (
-                <Alert color="warning">Don't forget to save your changes</Alert>
+                <Alert variant="warning">Don't forget to save your changes</Alert>
             )}
         </form>
     )

@@ -1,5 +1,5 @@
-import React, {useEffect} from 'react';
-import {Route, Routes} from 'react-router-dom';
+import {useEffect} from 'react';
+import {Route, Routes} from 'react-router';
 import SKUSystemTab from '../ducks/sku/SKUSystemTab';
 import {loadUser} from "../ducks/users";
 import {loadSettings} from "../ducks/settings";
@@ -9,9 +9,10 @@ import GroupsTab from "../ducks/groups/GroupsTab";
 import CategoriesTab from "../ducks/categories/CategoriesTab";
 import ColorUPCTab from "../ducks/colorUPC/ColorUPCTab";
 import {useAppDispatch} from "./configureStore";
-import {ErrorBoundary} from "chums-components";
 import AppContent from "./AppContent";
 import IndexRedirect from "./IndexRedirect";
+import {ErrorBoundary} from "react-error-boundary";
+import ErrorFallbackComponent from "@/components/ErrorFallbackComponent.tsx";
 
 
 const App = () => {
@@ -24,7 +25,7 @@ const App = () => {
 
 
     return (
-        <ErrorBoundary>
+        <ErrorBoundary FallbackComponent={ErrorFallbackComponent}>
             <Routes>
                 <Route path="/" element={<AppContent/>}>
                     <Route index element={<IndexRedirect/>}/>

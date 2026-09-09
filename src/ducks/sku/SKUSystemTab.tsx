@@ -1,13 +1,12 @@
-import React from 'react';
 import {useSelector} from "react-redux";
 import BaseSKUList from "./BaseSKUList";
 import SKUFilter from "./SKUFilter";
 import {selectSKUGroupFilter} from "./selectors";
 import SKUEditor from "./SKUEditor";
 import SKUItemList from "../items/SKUItemList";
-import Version from "../version/Version";
+import {AppVersion} from "@chumsinc/ui";
 
-const SKUSystemTab: React.FC = () => {
+const SKUSystemTab = () => {
     const selectedGroup = useSelector(selectSKUGroupFilter);
     return (
         <div>
@@ -19,7 +18,7 @@ const SKUSystemTab: React.FC = () => {
                 </div>
                 <div className="col-sm-3">
                     <SKUEditor />
-                    <Version />
+                    <AppVersion />
                 </div>
                 <div className="col-sm-5">
                     <SKUItemList/>

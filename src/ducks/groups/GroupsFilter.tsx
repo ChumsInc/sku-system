@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {
     loadSKUGroupList,
@@ -10,11 +10,11 @@ import {
     setSearch,
     toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {useAppDispatch} from "../../app/configureStore";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const GroupsFilter: React.FC = () => {
+const GroupsFilter = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const filterInactive = useSelector(selectFilterInactive);

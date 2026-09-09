@@ -1,21 +1,22 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectCurrentSKU, selectLoading, selectSaving} from "./selectors";
 import {removeSKU, saveSKU} from "./actions";
 import {selectIsAdmin} from "../users";
-import {FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
-import {TextareaAutosize} from '@mui/base';
 import SKUGroupSelect from "../groups/SKUGroupSelect";
-import {BaseSKU, Editable, SKUGroup} from "chums-types";
+import type {BaseSKU, Editable, SKUGroup} from "chums-types";
 import {defaultBaseSKU} from "../../api/sku";
 import {formatGTIN} from "@chumsinc/gtin-tools";
 import {useAppDispatch} from "../../app/configureStore";
+import FormColumn from "@/components/FormColumn.tsx";
+import TextArea from "@chumsinc/textarea";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const SKUEditor: React.FC = () => {
+const SKUEditor = () => {
     const dispatch = useAppDispatch();
     const selected = useSelector(selectCurrentSKU);
     const loading = useSelector(selectLoading);
@@ -93,7 +94,7 @@ const SKUEditor: React.FC = () => {
                     </datalist>
                 </FormColumn>
                 <FormColumn label="Notes">
-                    <TextareaAutosize className="form-control form-control-sm" minRows={3}
+                    <TextArea size="sm" minRows={3}
                                       readOnly={!isAdmin} onChange={onChangeNotes} value={baseSKU.notes || ''}/>
                 </FormColumn>
                 <FormColumn label="Active">

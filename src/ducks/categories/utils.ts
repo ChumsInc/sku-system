@@ -1,5 +1,4 @@
-import {SortProps} from "chums-components";
-import {ProductCategory} from "chums-types";
+import type {ProductCategory, SortProps} from "chums-types";
 
 export const categoryKey = (cat?: ProductCategory | null) => [cat?.code, cat?.productLine].join(':');
 

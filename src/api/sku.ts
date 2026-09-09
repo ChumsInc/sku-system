@@ -1,5 +1,5 @@
-import {fetchJSON} from "chums-components";
-import {BaseSKU} from "chums-types";
+import {fetchJSON} from "@chumsinc/ui-utils";
+import type {BaseSKU} from "chums-types";
 
 export const defaultBaseSKU: BaseSKU = {
     id: 0,

@@ -1,19 +1,20 @@
 import {combineReducers} from "redux";
-import {SortProps} from "chums-components";
 import {QueryStatus} from "@reduxjs/toolkit/query";
 import {createAction, createAsyncThunk, createReducer, createSelector} from "@reduxjs/toolkit";
-import {SKUGroup} from "chums-types";
+import type {SKUGroup, SortProps} from "chums-types";
 import {
     createDefaultListActions,
-    CurrentValueState,
+    type CurrentValueState,
     initialCurrentValueState,
+    type InitialListState,
     initialListState,
-    ListState
+    type ListState
 } from "../redux-utils";
 import {fetchSKUGroup, fetchSKUGroups, postSKUGroup} from "../../api/skuGroups";
-import {RootState} from "../../app/configureStore";
-import {getPreference, localStorageKeys, setPreference} from "../../api/preferences";
+import type {RootState} from "../../app/configureStore";
+import {localStorageKeys} from "../../api/preferences";
 import {selectIsAdmin} from "../users";
+import {LocalStore} from "@chumsinc/ui-utils";
 
 export const defaultSkuGroupSort: SortProps<SKUGroup> = {field: 'code', ascending: true};
 
@@ -28,14 +29,14 @@ export const defaultSKUGroup: SKUGroup = {
 }
 
 export const initialSKUGroupListState = (): ListState<SKUGroup> => ({
-    ...initialListState,
-    rowsPerPage: getPreference<number>(localStorageKeys.groupsRowsPerPage, 25),
+    ...initialListState as InitialListState<SKUGroup>,
+    rowsPerPage: LocalStore.getItem<number>(localStorageKeys.groupsRowsPerPage, 25),
     sort: {...defaultSkuGroupSort},
-    showInactive: getPreference(localStorageKeys.groupListShowInactive, false),
+    showInactive: LocalStore.getItem(localStorageKeys.groupListShowInactive, false),
 });
 
 export const initialCurrentSKUGroup: CurrentValueState<SKUGroup> = {
-    ...initialCurrentValueState,
+    ...initialCurrentValueState as CurrentValueState<SKUGroup>,
 }
 
 export const {
@@ -84,7 +85,7 @@ export const loadSKUGroup = createAsyncThunk<SKUGroup | null, SKUGroup>(
         return await fetchSKUGroup(arg.id);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectLoading(state) && !selectSaving(state);
         }
@@ -98,20 +99,20 @@ export const loadSKUGroupList = createAsyncThunk<SKUGroup[]>(
         return await fetchSKUGroups();
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectListLoading(state);
         }
     }
 )
 
-export const saveSKUGroup = createAsyncThunk<SKUGroup|null, SKUGroup>(
+export const saveSKUGroup = createAsyncThunk<SKUGroup | null, SKUGroup>(
     'skuGroups/current/save',
     async (arg) => {
         return await postSKUGroup(arg);
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return selectIsAdmin(state) && !selectLoading(state) && !selectSaving(state);
         }
@@ -144,7 +145,7 @@ const skuGroupListReducer = createReducer(initialSKUGroupListState, (builder) =>
         .addCase(toggleShowInactive, (state, action) => {
             state.showInactive = action.payload ?? !state.showInactive;
             state.page = 0;
-            setPreference(localStorageKeys.groupListShowInactive, state.showInactive);
+            LocalStore.setItem(localStorageKeys.groupListShowInactive, state.showInactive);
         })
         .addCase(setPage, (state, action) => {
             state.page = action.payload;
@@ -152,13 +153,13 @@ const skuGroupListReducer = createReducer(initialSKUGroupListState, (builder) =>
         .addCase(setRowsPerPage, (state, action) => {
             state.rowsPerPage = action.payload;
             state.page = 0;
-            setPreference<number>(localStorageKeys.groupsRowsPerPage, action.payload);
+            LocalStore.setItem<number>(localStorageKeys.groupsRowsPerPage, action.payload);
         })
         .addCase(setSort, (state, action) => {
             state.sort = action.payload;
             state.page = 0;
         })
-        .addCase(loadSKUGroupList.pending, (state, action) => {
+        .addCase(loadSKUGroupList.pending, (state,) => {
             state.loading = QueryStatus.pending;
         })
         .addCase(loadSKUGroupList.fulfilled, (state, action) => {

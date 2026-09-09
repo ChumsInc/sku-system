@@ -1,5 +1,5 @@
-import {ProductColorUPC, ProductColorUPCResponse} from 'chums-types';
-import {fetchJSON} from "chums-components";
+import type {ProductColorUPC, ProductColorUPCResponse} from 'chums-types';
+import {fetchJSON} from "@chumsinc/ui-utils";
 
 export const defaultColorUPC: ProductColorUPCResponse = {
     company: 'chums',

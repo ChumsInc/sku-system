@@ -1,5 +1,4 @@
-import {SortProps} from "chums-components";
-import {ProductColorUPC, ProductColorUPCResponse} from 'chums-types';
+import type {ProductColorUPC, ProductColorUPCResponse, SortProps} from 'chums-types';
 
 
 export const colorUPCKey = (color: ProductColorUPC) => color.upc;

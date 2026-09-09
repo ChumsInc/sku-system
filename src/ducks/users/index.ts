@@ -1,17 +1,16 @@
 // @ts-ignore
-import {ActionInterface, ActionPayload, fetchJSON} from "chums-ducks";
-import {CurrentValueState, initialCurrentValueState} from "../redux-utils";
+import {type CurrentValueState, initialCurrentValueState} from "../redux-utils";
 import {QueryStatus} from "@reduxjs/toolkit/query";
 import {createAsyncThunk, createReducer} from "@reduxjs/toolkit";
 import {fetchIsAdmin} from "../../api/user";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
 
 export interface UserState extends CurrentValueState<boolean> {
     loaded: boolean;
 }
 
 const initialUserState: UserState = {
-    ...initialCurrentValueState,
+    ...initialCurrentValueState as CurrentValueState<boolean>,
     loaded: false,
 }
 
@@ -21,7 +20,7 @@ export const loadUser = createAsyncThunk<boolean>(
         return await fetchIsAdmin();
     },
     {
-        condition: (arg, {getState}) => {
+        condition: (_, {getState}) => {
             const state = getState() as RootState;
             return !selectUserLoading(state);
         }
@@ -38,7 +37,7 @@ const userReducer = createReducer(initialUserState, (builder) => {
             state.loading = QueryStatus.fulfilled;
             state.loaded = true;
         })
-        .addCase(loadUser.rejected, (state, action) => {
+        .addCase(loadUser.rejected, (state) => {
             state.value = false;
             state.loading = QueryStatus.rejected;
         })

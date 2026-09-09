@@ -1,4 +1,4 @@
-import React, {ChangeEvent} from "react";
+import {type ChangeEvent} from "react";
 import {useSelector} from "react-redux";
 import {
     loadCategoryList,
@@ -10,11 +10,11 @@ import {
     setSearch,
     toggleShowInactive
 } from "./index";
-import {SpinnerButton} from "chums-components";
 import ShowInactiveCheckbox from "../../components/ShowInactiveCheckbox";
 import {useAppDispatch} from "../../app/configureStore";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
 
-const CategoriesFilter: React.FC = () => {
+const CategoriesFilter = () => {
     const dispatch = useAppDispatch();
     const search = useSelector(selectSearch);
     const showInactive = useSelector(selectShowInactive);
@@ -42,7 +42,7 @@ const CategoriesFilter: React.FC = () => {
                 </button>
             </div>
             <div className="col-auto">
-                <SpinnerButton type="button" size="sm" spinning={loading} onClick={onClickReload}>
+                <SpinnerButton type="button" size="sm" spinning={loading} onClick={onClickReload} spinnerProps={{size: 'sm'}} spinnerPosition="end">
                     Reload
                 </SpinnerButton>
             </div>

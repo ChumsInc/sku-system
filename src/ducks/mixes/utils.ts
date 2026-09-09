@@ -1,5 +1,4 @@
-import {SortProps} from "chums-components";
-import {ProductMixInfo} from "chums-types";
+import type {ProductMixInfo, SortProps} from "chums-types";
 
 export const defaultMixSort: SortProps<ProductMixInfo> = {
     field: "code",

@@ -1,5 +1,5 @@
 import {productSKUSorter} from "./utils";
-import {RootState} from "../../app/configureStore";
+import type {RootState} from "../../app/configureStore";
 import {createSelector} from "@reduxjs/toolkit";
 import {QueryStatus} from "@reduxjs/toolkit/query";
 

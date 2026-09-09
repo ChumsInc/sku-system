@@ -1,19 +1,21 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {defaultSKUGroup, saveSKUGroup, selectCurrentSKUGroup, selectLoading, selectSaving} from "./index";
-import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
-import {TextareaAutosize} from '@mui/base'
-import {Editable, SKUGroup} from "chums-types";
+import type {Editable, SKUGroup} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
+import FormColumn from "@/components/FormColumn.tsx";
+import TextArea from "@chumsinc/textarea";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 
-const GroupEditor: React.FC = () => {
+const GroupEditor = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentSKUGroup);
@@ -62,20 +64,20 @@ const GroupEditor: React.FC = () => {
             </FormColumn>
 
             <FormColumn label="Notes">
-                <TextareaAutosize readOnly={!isAdmin} value={group.notes || ''} onChange={onChange('notes')}
+                <TextArea readOnly={!isAdmin} value={group.notes || ''} onChange={onChange('notes')}
                                   className="form-control form-control-sm"/>
             </FormColumn>
             <FormColumn label="Active">
                 <ActiveButtonGroup active={group.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit" size="sm" color="primary" spinning={saving}
+                <SpinnerButton type="submit" size="sm" color="primary" spinning={saving} spinnerProps={{}} spinnerPosition="start"
                                disabled={saving || loading || !isAdmin}>
                     Save
                 </SpinnerButton>
             </FormColumn>
             {group.changed && (
-                <Alert color="warning">Don't forget to save your changes</Alert>
+                <Alert variant="warning">Don't forget to save your changes</Alert>
             )}
         </form>
     )

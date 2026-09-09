@@ -1,21 +1,22 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {saveColorUPC, selectCurrentColorUPC, selectLoading, selectSaving} from "./index";
-import {Alert, FormColumn, SpinnerButton} from "chums-components";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
-import CompanySelect from "../../components/CompanySelect";
-import {TextareaAutosize} from '@mui/base';
-import {Editable, ProductColorUPCResponse} from "chums-types";
+import type {Editable, ProductColorUPCResponse} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
 import {formatGTIN} from '@chumsinc/gtin-tools';
 import {defaultColorUPC} from "../../api/colorUPC";
+import FormColumn from "@/components/FormColumn.tsx";
+import TextArea from "@chumsinc/textarea";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 
-const ColorUPCEditor: React.FC = () => {
+const ColorUPCEditor = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentColorUPC);
@@ -56,9 +57,6 @@ const ColorUPCEditor: React.FC = () => {
         <div>
             <form className="form-horizontal" onSubmit={onSubmit}>
                 <h3>Color UPC Editor</h3>
-                <FormColumn label="Company">
-                    <CompanySelect value={'chums'} disabled={!isAdmin} onChange={onChange('company')}/>
-                </FormColumn>
                 <FormColumn label="Item Code">
                     <input type="text" readOnly={!isAdmin} value={colorUPC.ItemCode || ''}
                            className="form-control form-control-sm" minLength={2} maxLength={30}
@@ -80,10 +78,9 @@ const ColorUPCEditor: React.FC = () => {
                     <small className="text-muted">Leave blank to assign the next by-color UPC.</small>
                 </FormColumn>
                 <FormColumn label="Notes">
-                    <TextareaAutosize
+                    <TextArea size="sm"
                         readOnly={!isAdmin} value={colorUPC.notes || ''} onChange={onChange('notes')}
-                        minRows={3}
-                        className="form-control form-control-sm"/>
+                        minRows={3} />
                 </FormColumn>
                 <FormColumn label="Active">
                     <ActiveButtonGroup active={colorUPC.active} onChange={onChangeActive} disabled={!isAdmin}/>
@@ -95,7 +92,7 @@ const ColorUPCEditor: React.FC = () => {
                     </SpinnerButton>
                 </FormColumn>
                 {colorUPC.changed && (
-                    <Alert color="warning">Don't forget to save your changes</Alert>
+                    <Alert variant="warning">Don't forget to save your changes</Alert>
                 )}
             </form>
             <hr/>

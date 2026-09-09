@@ -1,4 +1,4 @@
-import React, {InputHTMLAttributes, useId} from "react";
+import {type InputHTMLAttributes, useId} from "react";
 
 export interface ShowInactiveCheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
     countInactive?: number;

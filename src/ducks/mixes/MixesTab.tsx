@@ -2,12 +2,11 @@
  * Created by steve on 3/21/2017.
  */
 
-import React from 'react';
 import MixesFilter from "./MixesFilter";
 import MixesList from "./MixesList";
 import MixEditor from "./MixEditor";
 
-const MixesTab: React.FC = () => {
+const MixesTab = () => {
 
     return (
         <div className="container">

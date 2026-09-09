@@ -1,6 +1,5 @@
-import React from "react";
 import {useSelector} from "react-redux";
-import {SortableTable, SortableTableField, SortProps, TablePagination} from "chums-components";
+import {SortableTable, type SortableTableField, type SortProps, TablePagination} from "@chumsinc/sortable-tables";
 import {
     loadMix,
     selectCurrentMix,
@@ -14,10 +13,8 @@ import {
 } from "./index";
 import TrimmedText from "../../components/TrimmedText";
 import classNames from "classnames";
-import {ProductMixInfo} from "chums-types";
+import type {ProductMixInfo} from "chums-types";
 import {useAppDispatch} from "../../app/configureStore";
-
-const tableId = 'mixes-list';
 
 const fields: SortableTableField<ProductMixInfo>[] = [
     {field: 'code', title: 'Code', sortable: true},
@@ -27,7 +24,7 @@ const fields: SortableTableField<ProductMixInfo>[] = [
 
 const rowClassName = (row: ProductMixInfo) => classNames({'text-danger': !row.active});
 
-const MixesList: React.FC = () => {
+const MixesList = () => {
     const dispatch = useAppDispatch();
     const sort = useSelector(selectSort);
     const page = useSelector(selectPage);
@@ -49,8 +46,8 @@ const MixesList: React.FC = () => {
                            rowClassName={rowClassName}
                            selected={selected?.id} onSelectRow={onSelectRow}/>
             <TablePagination page={page} onChangePage={onChangePage} rowsPerPage={rowsPerPage}
-                             showFirst showLast bsSize="sm"
-                             onChangeRowsPerPage={onChangeRowsPerPage} count={list.length}/>
+                             showFirst showLast size="sm"
+                             rowsPerPageProps={{onChange: onChangeRowsPerPage}} count={list.length}/>
         </>
     )
 }

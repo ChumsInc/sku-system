@@ -1,5 +1,5 @@
-import {fetchJSON} from "chums-components";
-import {ProductColor} from "chums-types";
+import {fetchJSON} from "@chumsinc/ui-utils";
+import type {ProductColor} from "chums-types";
 
 
 export const defaultProductColor: ProductColor = {

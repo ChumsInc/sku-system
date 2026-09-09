@@ -1,19 +1,21 @@
 /**
  * Created by steve on 3/22/2017.
  */
-import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react';
+import {type ChangeEvent, type FormEvent, useEffect, useState} from 'react';
 import {useSelector} from "react-redux";
 import {selectIsAdmin} from "../users";
 import {saveCategory, selectCurrentCategory, selectLoading, selectSaving} from "./index";
 import ActiveButtonGroup from "../../components/ActiveButtonGroup";
 import ProductLineSelect from "../../components/ProductLineSelect";
 import {useAppDispatch} from "../../app/configureStore";
-import {Editable, ProductCategory} from "chums-types";
-import {Alert, FormColumn, SpinnerButton} from "chums-components";
+import type {Editable, ProductCategory} from "chums-types";
 import {defaultCategory} from "../../api/categories";
+import FormColumn from "@/components/FormColumn.tsx";
+import SpinnerButton from "@/components/SpinnerButton.tsx";
+import Alert from "react-bootstrap/Alert";
 
 
-const CategoriesEditor: React.FC = () => {
+const CategoriesEditor = () => {
     const dispatch = useAppDispatch();
     const isAdmin = useSelector(selectIsAdmin);
     const selected = useSelector(selectCurrentCategory);
@@ -80,10 +82,12 @@ const CategoriesEditor: React.FC = () => {
                 <ActiveButtonGroup active={category.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit" color="primary" size="sm" spinning={isSaving} disabled={isSaving || isLoading}>Save</SpinnerButton>
+                <SpinnerButton type="submit" color="primary" size="sm" spinning={isSaving} disabled={isSaving || isLoading}
+                               spinnerPosition="end" spinnerProps={{size: 'sm'}}
+                >Save</SpinnerButton>
             </FormColumn>
             {category.changed && (
-                <Alert color="warning">Don't forget to save your changes</Alert>
+                <Alert variant="warning">Don't forget to save your changes</Alert>
             )}
         </form>
     )

@@ -1,5 +1,4 @@
-import {BootstrapColor, SortableTableField} from "chums-components";
-import {
+import type {
     BaseSKU,
     CountryOfOrigin,
     PrimaryVendor,
@@ -26,20 +25,6 @@ export interface Product {
     UDF_UPC: string | null,
     UDF_UPC_BY_COLOR: string | null,
     ItemStatus: string | null,
-}
-
-export type ProductField = keyof Product;
-
-export interface ProductTableField extends SortableTableField {
-    field: ProductField,
-}
-
-export interface ErrorAlert {
-    id: number;
-    context: string;
-    message: string;
-    count: number;
-    color?: BootstrapColor;
 }
 
 export interface SettingsResponse {

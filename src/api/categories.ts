@@ -1,5 +1,5 @@
-import {fetchJSON} from "chums-components";
-import {ProductCategory} from "chums-types";
+import {fetchJSON} from "@chumsinc/ui-utils";
+import type {ProductCategory} from "chums-types";
 
 export const defaultCategory: ProductCategory = {
     id: null,

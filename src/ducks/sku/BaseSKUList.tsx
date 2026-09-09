@@ -62,7 +62,7 @@ const BaseSKUList = () => {
 
     return (
         <Fragment>
-            {loading && <ProgressBar animated striped className="mb-1"/>}
+            {loading && <ProgressBar animated striped now={100}  className="mb-1"/>}
             <SortableTable keyField={"sku"} fields={tableFields}
                            data={list.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)}
                            size="xs"

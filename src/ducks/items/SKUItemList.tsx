@@ -104,7 +104,7 @@ function SKUItemList() {
                                           countInactive={listLength - itemActiveCount}/>
                 </div>
                 <div className="col-auto">
-                    <SpinnerButton spinning={loading} size="sm" color="primary"
+                    <SpinnerButton spinning={loading} size="sm" variant="primary"
                                    onClick={onClickReload}>Reload</SpinnerButton>
                 </div>
             </div>

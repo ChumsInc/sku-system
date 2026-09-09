@@ -82,7 +82,7 @@ const CategoriesEditor = () => {
                 <ActiveButtonGroup active={category.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit" color="primary" size="sm" spinning={isSaving} disabled={isSaving || isLoading}
+                <SpinnerButton type="submit" variant="primary" size="sm" spinning={isSaving} disabled={isSaving || isLoading}
                                spinnerPosition="end" spinnerProps={{size: 'sm'}}
                 >Save</SpinnerButton>
             </FormColumn>

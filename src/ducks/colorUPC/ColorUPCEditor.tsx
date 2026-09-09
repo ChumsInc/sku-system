@@ -86,7 +86,7 @@ const ColorUPCEditor = () => {
                     <ActiveButtonGroup active={colorUPC.active} onChange={onChangeActive} disabled={!isAdmin}/>
                 </FormColumn>
                 <FormColumn label="">
-                    <SpinnerButton type="submit" className="btn btn-sm btn-primary"
+                    <SpinnerButton type="submit" size="sm"
                                    spinning={saving} disabled={saving || loading || !isAdmin}>
                         Save
                     </SpinnerButton>

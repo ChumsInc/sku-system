@@ -52,7 +52,7 @@ const SKUFilter = () => {
                 </button>
             </div>
             <div className="col-auto">
-                <SpinnerButton className="btn btn-sm btn-primary" onClick={onClickReload}
+                <SpinnerButton size="sm" onClick={onClickReload}
                                spinning={loading}>Reload</SpinnerButton>
             </div>
         </div>

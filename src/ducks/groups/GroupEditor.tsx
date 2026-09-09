@@ -71,7 +71,7 @@ const GroupEditor = () => {
                 <ActiveButtonGroup active={group.active} onChange={onChangeActive} disabled={!isAdmin}/>
             </FormColumn>
             <FormColumn label="">
-                <SpinnerButton type="submit" size="sm" color="primary" spinning={saving} spinnerProps={{}} spinnerPosition="start"
+                <SpinnerButton type="submit" size="sm" variant="primary" spinning={saving} spinnerProps={{}} spinnerPosition="start"
                                disabled={saving || loading || !isAdmin}>
                     Save
                 </SpinnerButton>

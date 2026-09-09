@@ -29,7 +29,7 @@ export default function ColorUPCButton({item}: ColorUPCButtonProps) {
     }
 
     return (
-        <SpinnerButton spinning={assigning.includes(item.ItemCode)} color="outline-success" className="btn-xs"
+        <SpinnerButton spinning={assigning.includes(item.ItemCode)} variant="outline-success" className="btn-xs"
                        onClick={clickHandler}>
             {!assigning.includes(item.ItemCode) && (<span className="bi-gear-fill"/>)}
         </SpinnerButton>

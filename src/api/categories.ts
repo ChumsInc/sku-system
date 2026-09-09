@@ -19,10 +19,10 @@ export async function fetchCategory(id: number|null|string): Promise<ProductCate
             return {...defaultCategory};
         }
         const url = typeof id === 'string'
-            ? `/api/operations/sku/categories/code/${encodeURIComponent(id)}`
-            : `/api/operations/sku/categories/${encodeURIComponent(id)}`
-        const res = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
-        return res?.list?.[0] ?? null;
+            ? `/api/operations/sku/categories/${encodeURIComponent(id)}.json`
+            : `/api/operations/sku/categories/by-id/${encodeURIComponent(id)}.json`
+        const res = await fetchJSON<{ category: ProductCategory|null }>(url, {cache: 'no-cache'})
+        return res?.category ?? null;
     } catch (err: unknown) {
         if (err instanceof Error) {
             console.debug("fetchCategory()", err.message);
@@ -35,7 +35,7 @@ export async function fetchCategory(id: number|null|string): Promise<ProductCate
 
 export async function fetchCategoryList(): Promise<ProductCategory[]> {
     try {
-        const url = '/api/operations/sku/categories';
+        const url = '/api/operations/sku/categories.json';
         const res = await fetchJSON<{ list?: ProductCategory[] }>(url, {cache: 'no-cache'})
         return res?.list ?? [];
     } catch (err: unknown) {
@@ -50,7 +50,8 @@ export async function fetchCategoryList(): Promise<ProductCategory[]> {
 
 export async function postCategory(arg: ProductCategory): Promise<ProductCategory|null> {
     try {
-        const url = '/api/operations/sku/categories';
+        const url = '/api/operations/sku/categories/:code.json'
+            .replace(':code', encodeURIComponent(arg.code))
         const body = JSON.stringify(arg);
         const res = await fetchJSON<{ category: ProductCategory }>(url, {method: 'POST', body});
         return res?.category ?? null;

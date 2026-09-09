@@ -7,7 +7,7 @@ export async function fetchSKUItems(arg: BaseSKU | null): Promise<Product[]> {
         if (!arg) {
             return [];
         }
-        const url = `/api/operations/sku/${encodeURIComponent(arg.sku)}`
+        const url = `/api/operations/sku/${encodeURIComponent(arg.sku)}.json`
         const res = await fetchJSON<{ list: Product[] }>(url, {cache: 'no-cache'});
         return res?.list ?? [];
     } catch (err: unknown) {

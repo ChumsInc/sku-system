@@ -16,7 +16,7 @@ export async function fetchSKU(id: number): Promise<BaseSKU | null> {
         if (!id) {
             return {...defaultBaseSKU};
         }
-        const url = `/api/operations/sku/base/${encodeURIComponent(id)}`;
+        const url = `/api/operations/sku/base/${encodeURIComponent(id)}.json`;
         const res = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
         return res?.list[0] ?? null;
     } catch (err: unknown) {
@@ -31,7 +31,8 @@ export async function fetchSKU(id: number): Promise<BaseSKU | null> {
 
 export async function fetchSKUList(groupId: number | null): Promise<BaseSKU[]> {
     try {
-        const url = `/api/operations/sku/base/group/${encodeURIComponent(groupId ?? '')}`;
+        const url = groupId ? `/api/operations/sku/base/group/${encodeURIComponent(groupId ?? '')}.json`
+        : '/api/operations/sku/base.json';
         const res = await fetchJSON<{ list: BaseSKU[] }>(url, {cache: "no-cache"});
         return res?.list ?? [];
     } catch (err: unknown) {
@@ -46,7 +47,7 @@ export async function fetchSKUList(groupId: number | null): Promise<BaseSKU[]> {
 
 export async function postSKU(arg: BaseSKU): Promise<BaseSKU|null> {
     try {
-        const url = '/api/operations/sku/base';
+        const url = '/api/operations/sku/base.json';
         const body = JSON.stringify(arg);
         const res = await fetchJSON<{ skuBase: BaseSKU }>(url, {method: 'POST', body});
         return res?.skuBase ?? null;
@@ -62,7 +63,7 @@ export async function postSKU(arg: BaseSKU): Promise<BaseSKU|null> {
 
 export async function deleteSKU(arg:BaseSKU, groupId: number|null):Promise<BaseSKU[]> {
     try {
-        const url = `/api/operations/sku/base/${encodeURIComponent(arg.id)}/${encodeURIComponent(arg.sku)}`;
+        const url = `/api/operations/sku/base/${encodeURIComponent(arg.id)}/${encodeURIComponent(arg.sku)}.json`;
         await fetchJSON(url, {method: 'DELETE'});
         return await fetchSKUList(groupId);
     } catch(err:unknown) {

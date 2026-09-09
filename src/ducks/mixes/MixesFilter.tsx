@@ -23,7 +23,7 @@ const MixesFilter = () => {
 
     const onChangeSearch = (ev: ChangeEvent<HTMLInputElement>) => dispatch(setSearch(ev.target.value));
     const showInactiveHandler = (ev: ChangeEvent<HTMLInputElement>) => dispatch(toggleShowInactive(ev.target.checked));
-    const onClickNewColor = () => dispatch(loadMix());
+    const onClickNewColor = () => dispatch(loadMix(null));
     const onClickReload = () => dispatch(loadMixes());
 
     return (

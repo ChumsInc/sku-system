@@ -32,7 +32,7 @@ const MixesList = () => {
     const list = useSelector(selectFilteredMixesList);
     const selected = useSelector(selectCurrentMix);
 
-    const onSelectRow = (row: ProductMixInfo) => dispatch(loadMix(row.id));
+    const onSelectRow = (row: ProductMixInfo) => dispatch(loadMix(row.code));
     const onChangePage = (page: number) => dispatch(setPage(page));
     const onChangeRowsPerPage = (rpp: number) => dispatch(setRowsPerPage(rpp));
     const sortChangedHandler = (sort: SortProps<ProductMixInfo>) => dispatch(setSort(sort));

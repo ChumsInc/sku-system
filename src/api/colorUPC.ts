@@ -21,7 +21,7 @@ export async function fetchColorUPC(id:number):Promise<ProductColorUPCResponse|n
         if (!id) {
             return {...defaultColorUPC}
         }
-        const url = `/api/operations/sku/by-color/${encodeURIComponent(id)}`;
+        const url = `/api/operations/sku/by-color/${encodeURIComponent(id)}.json`;
         const res = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
         return res?.list[0] ?? null;
     } catch(err:unknown) {
@@ -36,7 +36,7 @@ export async function fetchColorUPC(id:number):Promise<ProductColorUPCResponse|n
 
 export async function fetchColorUPCList():Promise<ProductColorUPCResponse[]> {
     try {
-        const url = `/api/operations/sku/by-color`;
+        const url = `/api/operations/sku/by-color.json`;
         const res = await fetchJSON<{list:ProductColorUPCResponse[]}>(url, {cache: 'no-cache'});
         return res?.list ?? [];
     } catch(err:unknown) {
@@ -53,13 +53,13 @@ export async function postColorUPC(arg:ProductColorUPC):Promise<ProductColorUPCR
     try {
         let upc = arg.upc;
         if (!upc) {
-            const res = await fetchJSON<{nextUPC:string}>('/api/operations/sku/by-color/next', {cache: 'no-cache'});
+            const res = await fetchJSON<{nextUPC:string}>('/api/operations/sku/by-color/next.json', {cache: 'no-cache'});
             if (!res?.nextUPC) {
                 return Promise.reject(new Error('Unable to fetch next UPC'));
             }
             upc = res?.nextUPC;
         }
-        const res = await fetchJSON<{colorUPC:ProductColorUPCResponse}>('/api/operations/sku/by-color', {
+        const res = await fetchJSON<{colorUPC:ProductColorUPCResponse}>('/api/operations/sku/by-color.json', {
             method: 'POST',
             body: JSON.stringify({...arg, upc})
         });

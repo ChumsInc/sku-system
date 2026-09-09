@@ -50,7 +50,7 @@ export const loadMixes = createAsyncThunk<ProductMixInfo[]>(
     }
 )
 
-export const loadMix = createAsyncThunk<ProductMixInfo | null, number | undefined>(
+export const loadMix = createAsyncThunk<ProductMixInfo | null, string|null | undefined>(
     'mixes/current/load',
     async (arg) => {
         return await fetchMix(arg);

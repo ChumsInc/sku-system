@@ -4,7 +4,7 @@ import {fetchJSON} from "@chumsinc/ui-utils";
 
 export async function fetchSettings(): Promise<SettingsResponse|null> {
     try {
-        const url = '/api/operations/product-master/settings/chums';
+        const url = '/api/operations/product-master/v2/settings.json';
         const res = await fetchJSON<{settings: SettingsResponse}>(url, {cache: "no-cache"});
         return res?.settings ?? null;
     } catch (err: unknown) {

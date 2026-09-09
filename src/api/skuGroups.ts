@@ -4,7 +4,7 @@ import {defaultSKUGroup} from "../ducks/groups";
 
 export async function fetchSKUGroups():Promise<SKUGroup[]> {
     try {
-        const url = '/api/operations/sku/groups';
+        const url = '/api/operations/sku/groups.json';
         const res = await fetchJSON<{list:SKUGroup[]}>(url, {cache: 'no-cache'});
         return res?.list ?? [];
     } catch(err:unknown) {
@@ -22,9 +22,9 @@ export async function fetchSKUGroup(id:number):Promise<SKUGroup|null> {
         if (!id) {
             return {...defaultSKUGroup};
         }
-        const url = `/api/operations/sku/groups/${encodeURIComponent(id)}`;
-        const res = await fetchJSON<{list: SKUGroup[]}>(url, {cache: 'no-cache'});
-        return res?.list[0] ?? null;
+        const url = `/api/operations/sku/groups/${encodeURIComponent(id)}.json`;
+        const res = await fetchJSON<{group: SKUGroup|null}>(url, {cache: 'no-cache'});
+        return res?.group ?? null;
     } catch(err:unknown) {
         if (err instanceof Error) {
             console.debug("fetchSKUGroup()", err.message);
@@ -37,7 +37,7 @@ export async function fetchSKUGroup(id:number):Promise<SKUGroup|null> {
 
 export async function postSKUGroup(arg:SKUGroup):Promise<SKUGroup|null>{
     try {
-        const url = '/api/operations/sku/groups';
+        const url = '/api/operations/sku/groups.json';
         const res = await fetchJSON<{group:SKUGroup}>(url, {
             method: 'POST',
             body: JSON.stringify(arg)
